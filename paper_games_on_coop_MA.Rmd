@@ -1,0 +1,147 @@
+---
+title             : "Influence of games on cooperative behaviours. Metaanalysis"
+shorttitle        : "GAMES ON COOP"
+
+author: 
+  - name          : "Agnieszka Szostak"
+    affiliation   : "1"
+    corresponding : no    # Define only one corresponding author
+    address       : "Postal address"
+    email         : "my@email.com"
+    role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
+      - "Conceptualization"
+      - "Writing - Original Draft Preparation"
+      - "Writing - Review & Editing"
+  - name          : "Paweł Kleka"
+    affiliation   : "1"
+    role:
+      - "Analysis"
+      - "Writing - Review & Editing"
+      - "Supervision"
+
+affiliation:
+  - id            : "1"
+    institution   : "Adam Mickiewicz University in Poznan"
+
+authornote: |
+  Add complete departmental affiliations for each author here. Each new line herein must be indented, like this line.
+
+  Enter author note here.
+
+abstract: |
+  One or two sentences providing a **basic introduction** to the field,  comprehensible to a scientist in any discipline.
+  
+  Two to three sentences of **more detailed background**, comprehensible  to scientists in related disciplines.
+  
+  One sentence clearly stating the **general problem** being addressed by  this particular study.
+  
+  One sentence summarizing the main result (with the words "**here we show**" or their equivalent).
+  
+  Two or three sentences explaining what the **main result** reveals in direct comparison to what was thought to be the case previously, or how the  main result adds to previous knowledge.
+  
+  One or two sentences to put the results into a more **general context**.
+  
+  Two or three sentences to provide a **broader perspective**, readily comprehensible to a scientist in any discipline.
+  
+  <!-- https://tinyurl.com/ybremelq -->
+  
+keywords          : "keywords"
+wordcount         : "X"
+
+bibliography      : "r-references.bib"
+
+floatsintext      : no
+linenumbers       : yes
+draft             : yes
+mask              : no
+
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+
+classoption       : "man"
+output            : papaja::apa6_pdf
+---
+
+```{r setup, include = FALSE}
+library("papaja")
+r_refs("r-references.bib")
+```
+
+```{r analysis-preferences}
+# Seed for random number generation
+set.seed(42)
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+```
+
+The video games industry has grown significantly over the last few decades.
+According to the 2021 Newzoo report, the game market is now worth \$175.8 billion, and there are over 3 billion gamers worldwide.
+Video games are popular, diverse, easily accessible, and played by people of all ages and nationalities.
+Respectively has been growing the research around the game's influence on human behavior, cognition, and affect.
+Initially, researchers focused mainly on the antisocial effects of playing video games.
+In 2010 Anderson et al. published the first meta-analysis on the effects of playing video games.
+They studied the effects of playing violent video games on aggressive behavior, aggressive cognition, aggressive affect, physiological arousal, empathy, and prosocial behavior.
+As expected, playing violent video games turned out to be a causal risk factor for aggressive behavior, cognition, and affect.
+It was also related to lower empathy and prosocial behavior (Anderson, 2010).
+The first meta-analysis that examined the prosocial effects of playing video games was published in 2014 by Greitemyer and Mügge.
+The results showed that as violent video games increase aggression-related variables, prosocial games have the opposite effect (Greitemyer and Mügge, 2014).
+These studies solemnly focused on the content of video games.
+As a framework, they commonly used the General Learning Model.
+This theory predicts that interacting with video game content can have short-term and long-term effects (Buckley & Anderson, 2010).
+Games provide models, reinforce certain behaviors, and primes prosocial or antisocial cognitive scripts.
+GML describes how repeated exposure to playing video games may lead to long-term changes in behavior and cognition by influencing attitudes, schemas, and affective traits.
+However, this approach leaves out one vital aspect, the context of playing the game.
+Some studies in recent years showed that playing the same game cooperatively, alone, or competitively has a different effect on the player.
+For example, Jerabeck & Ferguson's (2013) study examined how the content and context of the game influence the aggressive or prosocial behavior of the players.
+Gathered data indicated that: "Playing cooperatively was associated with less aggressive behavior, whether games were violent or not"(Jerabeck, Ferguson, 2013).
+Therefore in this meta-analysis, we decided to study both cooperative and prosocial games to address the distinction between content and context of gameplay and examine how those two factors intertwine and impact prosocial behavior.
+
+## Current study
+
+According to Daniel Batson, prosocial behaviors refer to "a broad range of actions intended to benefit one or more people other than oneself---behaviors such as helping, comforting, sharing and cooperation."(2003, p.463).
+In my experience, we can talk about two types of prosocial games.
+Firstly, there are prosocial games that are prosocial by design.
+The mechanics, the plot, and the goal of those games are coherent and intend to promote prosocial change in players.
+Secondly, we can find a significant amount of commercial games that have prosocial effects on players, without that ever being their main intention.
+They usually have some prosocial content (e.g. mechanics, story, goal, or role) or context (playing cooperatively).
+The key fact to remember is that we can not put a simple distinction between prosocial, neutral, and antisocial games.
+For instance, there are games where you cooperate with other players in your team, but you fight against other teams or games where you use violence, but the main goal is to save the world.
+As there is no objective way of distinguishing which games are prosocial enough to be included, we decided to trust the authors of the original studies that the games they chose are indeed prosocial.
+
+# Methods
+
+We report how we determined our sample size, all data exclusions (if any), all manipulations, and all measures in the study.
+<!-- 21-word solution (Simmons, Nelson & Simonsohn, 2012; retrieved from http://ssrn.com/abstract=2160588) -->
+
+## Participants
+
+## Material
+
+## Procedure
+
+### Literature Search
+
+In search of relevant studies, we used Google Scholar as a database.
+We used the following search term: **"*prosocial games*" OR "*cooperative games*" AND "*prosocial behavior*'" OR "*cooperative behavior*" OR "*prosocial attitude*" OR "*prosocial behaviour*'" OR "*cooperative behaviour*"** -equilibrium.
+The search was conducted on the 22ed of February 2021.
+In the first stage, we analyzed 1407 abstracts to find 85 studies that appeared suitable.
+Upon further reading, from those 85 articles, we selected 45 that were relevant and had efficient data to be used in the meta-analysis.
+Inclusion Criteria: The study had to be published between 2014 and 2021.
+The study had to be written in English.
+The study had to include either a cooperative or prosocial game as a variable.
+The study had to measure at least one social outcome variable, such as prosocial behavior, attitude, or affect.
+
+## Data analysis
+
+We used `r cite_r("r-references.bib")` for all our analyses.
+
+# Results
+
+# Discussion
+
+\newpage
+
+# References
+
+::: {#refs custom-style="Bibliography"}
+:::
