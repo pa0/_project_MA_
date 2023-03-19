@@ -48,7 +48,7 @@ abstract: |
 keywords          : "keywords"
 wordcount         : "X"
 
-bibliography      : "r-references.bib"
+bibliography      : "bibliografia.2.0.bib"
 
 floatsintext      : no
 linenumbers       : yes
