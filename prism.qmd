@@ -1,0 +1,59 @@
+---
+title: "PRISMA"
+format: html
+---
+
+![Wzór](prism.png){fig-align="center"}
+
+```{r}
+library(DiagrammeR)
+```
+
+```{r}
+# Do poprawy wg wzoru
+grViz("
+  digraph PRISMA {
+    graph [layout = dot, rankdir = LR]
+
+    node [shape = box, style = filled, fillcolor = lightgrey, width = 3, height = 0.8]
+
+    # Kolumny z nagłówkami
+    label_prev         [label = 'Previous studies', fillcolor = goldenrod, fontsize = 18]
+    label_new          [label = 'Identification of new studies via databases and registers', fillcolor = goldenrod, fontsize = 18]
+    label_methods      [label = 'Identification of new studies via other methods', fillcolor = goldenrod, fontsize = 18]
+
+    # Węzły dla poprzednich badań
+    prev_studies       [label = 'Studies included in previous version of review\n(n = )']
+    prev_reports       [label = 'Reports of studies included in previous version of review\n(n = )']
+
+    # Węzły dla identyfikacji nowych badań
+    id_database        [label = 'Records identified from:\nDatabases (n = )\nRegisters (n = )']
+    removed_screening  [label = 'Records removed before screening:\nDuplicate records removed (n = )\nRecords marked as ineligible by automation tools (n = )\nRecords removed for other reasons (n = )']
+    records_screened   [label = 'Records screened\n(n = )']
+    records_excluded   [label = 'Records excluded\n(n = )']
+
+    reports_sought     [label = 'Reports sought for retrieval\n(n = )']
+    reports_not_retrieved [label = 'Reports not retrieved\n(n = )']
+    reports_assessed   [label = 'Reports assessed for eligibility\n(n = )']
+    reports_excluded   [label = 'Reports excluded:\nReason 1 (n = )\nReason 2 (n = )\nReason 3 (n = )']
+
+    new_studies        [label = 'New studies included in review\n(n = )']
+    new_reports        [label = 'Reports of new included studies\n(n = )']
+
+    # Węzły dla metod innych niż bazy danych
+    id_other_methods   [label = 'Records identified from:\nWebsites (n = )\nOrganisations (n = )\nCitation searching (n = )\netc.']
+
+    # Struktura kolumny
+    {rank=same; label_prev -> prev_studies -> prev_reports}
+    {rank=same; label_new -> id_database -> removed_screening -> records_screened -> reports_sought -> reports_assessed -> new_studies -> new_reports}
+    {rank=same; records_excluded}
+    {rank=same; label_methods -> id_other_methods -> reports_not_retrieved -> reports_excluded}
+
+    # Połączenia pomiędzy węzłami
+    prev_reports -> new_studies
+    reports_sought -> reports_not_retrieved
+    reports_assessed -> reports_excluded
+    records_screened -> records_excluded
+  }
+")
+```
