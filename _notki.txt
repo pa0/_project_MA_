@@ -1,10 +1,8 @@
 # Plik z danymi #
-
 https://docs.google.com/spreadsheets/d/1qQrY4O1jg_M8LEn4xJOcerJobdYHDjQl3KTuCKi9iSg/edit?usp=sharing
 
 
-Działa u Agnieszki!
-
-Działa u Pawła?
-
+# Link do nauki git w terminalu:
 https://learngitbranching.js.org/?locale=pl
+
+
