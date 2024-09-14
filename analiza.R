@@ -156,7 +156,8 @@ data = data %>%
          game_type = factor(if_else(game_type == 'video', 'V', 'O')),
          compared_game_type = case_when(compared_game_type == 'competitve' ~ 'competitive',
                                         compared_game_type == 'cooperetive' ~ 'cooperative',
-                                        TRUE ~ compared_game_type))
+                                        TRUE ~ compared_game_type)) %>%
+  relocate(measured_construct, .before = game_name)
 
 data %>% janitor::tabyl(group) 
 data = data %>% 
@@ -181,18 +182,18 @@ data = data %>%
                   factor(levels = c('C', 'Y', 'S', 'A')))  
   
 
-# transformacja danych # rozwinięcie testów statystycznych
+# transformacja danych # czyszczenie testów statystycznych
 
 data %>% janitor::tabyl(test) 
 data = data %>% 
-  mutate(test = str_to_lower(test) %>%
+  mutate(test = na_if(test, 's') %>%
+                  str_to_lower() %>%
                   str_remove_all('\\[|\\]') %>%
                   str_replace_all(
                            c('[.]' = ',',
                              ';' = ',',
                              'chi2' = 'chi',
-                             't [(]' = 't(',
-                             'f [(]' = 'f(',
+                             ' [(]' = '(',
                              '\n' = ' ',
                              ' +' = ' ',
                              ' ,' = ',',
@@ -202,18 +203,20 @@ data = data %>%
                              ' >' = '>',
                              '< ' = '<',
                              ' <' = '<',
-                             '[(](\\d+),\\s(\\d+)[)]' = '(\\1,\\2)',
-                             ', n=' = ',',
-                             '95%ci=' = '95%ci_low=',
-                             ',,' = ', 95%ci_up=0,',
+                             '[(](\\d+),(\\d+)[)]' = '(\\1;\\2)',
+                             '[(](\\d+),\\s(\\d+)[)]' = '(\\1;\\2)',
+                             ', n=' = ';',
+                             '95%ci=' = 'ci95%_low=',
+                             ',,' = ', ci95%_up=0,',
                              ', ' = ' ',
                              '=,' = '=0,',
                              '<,' = '<0,',
                              '>,' = '>0,',
-                             '-,' = '-0,'
-                             )) %>%
+                             '-,' = '-0,',
+                             ',' = '.',
+                             ';' = ',',
+                             'se=(\\d+),(\\d+)  p<(\\d+),(\\d+)' = 'p<(\\d+),(\\d+) se=(\\d+),(\\d+)')) %>%
                   str_trim()) 
-
 
 
 # podgląd danych
@@ -226,20 +229,35 @@ summarytools::dfSummary(data) %>%
 kableExtra::kable_styling(knitr::kable(data), font_size = 8)
 
 
+# transformacja danych # rozwinięcie testów statystycznych (do dalszej obróbki)
+
+data$test %>%
+  str_split(' ')
+
+data = data %>%
+  mutate(test_list = 
+          lapply(lapply(test, function(x) {y = str_split(x, ' ');
+          y = structure(y[[1]], names = c(sapply(y[[1]], function(z)
+            case_when(str_sub(z,1,2) %in% c('p=', 'p<', 'p>') ~ 'p',
+                      str_sub(z,1,2) %in% c('z=', 't(', 't=', 'f(', 'f=', 'ch') | str_sub(z,1,9) == 'ci95%_low' ~ 'stat',
+                      str_sub(z,1,8) == 'ci95%_up' ~ 'stat_2',
+                      str_sub(z,1,2) %in% c('se', 'sd') ~ 'se',
+                      str_sub(z,1,2) == 'd=' ~ 'd',
+                      TRUE ~ 'o'))));
+          y}),
+          function(w) w[order(factor(names(w), levels = c('p', 'stat', 'stat_2', 'se', 'd', 'o')))])) %>%
+  unnest_wider(test_list, names_sep = '.', names_repair = 'universal') %>% 
+  rename(test_list.d = test_list.d...38) %>% select(-test_list.d...39) %>%      # linijka do ostatniej obserwacji do pozbycia w przyszłości
+  relocate(str_c('test_list.', c('p', 'stat', 'stat_2', 'se', 'd', 'o')), .after = 'test') 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+# robocze:
+data %>%
+  mutate(test_list = 
+           lapply(lapply(data$test, function(x) {y = str_split(x, ' ');
+           y = structure(y[[1]], names = c(sapply(y[[1]], function(z)
+             if_else(str_sub(z,1,2) %in% c('p=', 'p<', 'p>', 'z=', 't(', 't=', 'f(', 'f=', 'ch', 'ci', 'se', 'sd', 'd='), str_sub(z,1,1), 'o'))));
+           y}),
+           function(w) w[order(factor(names(w), levels =  c('p', 'z', 't', 'f', 'c', 's', 'd', 'o')))])) 
 
 
