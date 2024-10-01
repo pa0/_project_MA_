@@ -1,13 +1,22 @@
+---
+title: "Analiza"
+author: Agnieszka
+---
 
+```{r}
 library(tidyverse)
+```
 
 
+```{r}
 # wczytanie danych
 
 data = readxl::read_xlsx('Meta 2.1.xlsx', sheet = 3)
 data %>% head
+```
 
 
+```{r}
 # usunięcie pustych kolumn
 
 data = data %>%
@@ -261,3 +270,4 @@ data %>%
            function(w) w[order(factor(names(w), levels =  c('p', 'z', 't', 'f', 'c', 's', 'd', 'o')))])) 
 
 
+```
