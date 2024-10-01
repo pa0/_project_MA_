@@ -22,6 +22,8 @@ data %>% head
 
 data = data %>%
   janitor::remove_constant(na.rm = TRUE)
+
+#data[,-which(is.na(colnames(data)))] -> data  # usunięcie kolumny z pustą nazwą
 ```
 
 
@@ -64,7 +66,7 @@ names(data) = c('bibitem',
                 'sd_prosoc',
                 'measured_construct')
 
-data[,-which(is.na(colnames(data)))] -> data  # usunięcie kolumny z pustą nazwą
+
 ```
 
 
@@ -142,6 +144,8 @@ data = data %>%
                                 first_author,
                                 str_sub(first_author, 1, str_locate(first_author, ',')[,1] - 1))) %>%
   mutate_at(vars(c(first_author, title)), str_to_title)
+
+data |> head()
 ```
 
 
@@ -157,10 +161,6 @@ data = data %>%
   mutate(SMD = as.numeric(SMD)) %>%
   relocate(effect_coef, .before = 'effect_size')
 
-data %>% janitor::tabyl(sd_prosoc)
-data %>% janitor::tabyl(sd_con)
-data %>% janitor::tabyl(m_con)
-data %>% janitor::tabyl(m_prosoc)
 
 data = data %>%
   mutate(sd_prosoc = str_replace(sd_prosoc, '=,', '=0,')) %>% 
@@ -172,10 +172,6 @@ data = data %>%
 ```{r}
 # transformacja danych # etykietowanie zmiennych jakościowych
 
-data %>% janitor::tabyl(plan) 
-data %>% janitor::tabyl(game_type) 
-data %>% janitor::tabyl(compared_game_type) 
-
 data = data %>%
   mutate(plan = factor(if_else(plan == 'eksperyment', 'E', 'C')),
          game_type = factor(if_else(game_type == 'video', 'V', 'O')),
@@ -184,7 +180,6 @@ data = data %>%
                                         TRUE ~ compared_game_type)) %>%
   relocate(measured_construct, .before = game_name)
 
-data %>% janitor::tabyl(group) 
 data = data %>% 
   mutate(group = str_remove_all(group, '[(]|[)]|lat|[+]| imigranci') %>%
                  str_replace_all(c('  ' = ' ',
@@ -211,7 +206,6 @@ data = data %>%
 ```{r}
 # transformacja danych # czyszczenie testów statystycznych
 
-data %>% janitor::tabyl(test) 
 data = data %>% 
   mutate(test = na_if(test, 's') %>%
                   str_to_lower() %>%
@@ -262,8 +256,7 @@ kableExtra::kable_styling(knitr::kable(data), font_size = 8)
 ```{r}
 # transformacja danych # rozwinięcie testów statystycznych (do dalszej obróbki)
 
-data$test %>%
-  str_split(' ')
+#data$test %>% str_split(' ')
 
 data = data %>%
   mutate(test_list = 

@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Meta-analysis"
 format: html
 ---
 
@@ -16,6 +16,22 @@ load("data.rds")
 
 
 ```{r}
-# tu zaczynamy
+# tu zaczynamy :-)
+
+# dane ilościowe
+data %>% janitor::tabyl(sd_prosoc)
+data %>% janitor::tabyl(sd_con)
+data %>% janitor::tabyl(m_con)
+data %>% janitor::tabyl(m_prosoc)
+
+# dane jakościowe
+data %>% janitor::tabyl(plan) 
+data %>% janitor::tabyl(game_type) 
+data %>% janitor::tabyl(compared_game_type) 
+
+# wyniki
+data %>% janitor::tabyl(group) 
+data %>% janitor::tabyl(test) 
+
 ```
 
