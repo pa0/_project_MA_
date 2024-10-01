@@ -6,3 +6,14 @@ https://docs.google.com/spreadsheets/d/1qQrY4O1jg_M8LEn4xJOcerJobdYHDjQl3KTuCKi9
 https://learngitbranching.js.org/?locale=pl
 
 
+# Literatura  
+Cohen, J. (1988). Statistical power analysis for the behavioral sciences (2nd ed.). Hillsdale, NJ: Lawrence Earlbaum Associates.
+Dunlop, W. P., Cortina, J. M., Vaslow, J. B., & Burke, M. J. (1996). Meta-analysis of experiments with matched groups or repeated measures designs. Psychological Methods, 1, 170-177.
+Lipsey, M. W., & Wilson, D. B. (1993). The efficacy of psychological, educational, and behavioral treatment: Confirmation from meta-analysis. American Psychologist, 48, 1181-1209.
+Mullen, H., & Rosenthal, R. (1985). BASIC meta-analysis: Procedures and programs. Hillsdale, NJ: Earlbaum.
+Nunnally, J. C. (1978). Psychometric Theory. New York: McGraw-Hill.
+Rosenthal, R. (1991). Meta-analytic procedures for social research. Newbury Park, CA: Sage.
+Rosenthal, R. & Rosnow, R. L. (1991). Essentials of behavioral research: Methods and data analysis (2nd ed.). New York: McGraw Hill.
+Rosenthal, R. & Rubin, D. B. (1986). Meta-analytic procedures for combining studies with multiple effect sizes. Psychological Bulletin, 99, 400-406.
+Rosnow, R. L., & Rosenthal, R. (1996). Computing contrasts, effect sizes, and counternulls on other people's published data: General procedures for research consumers. Pyschological Methods, 1, 331-340.
+Van Etten, Michelle E., & Taylor, S. (1998). Comparative efficacy of treatments for posttraumatic stress disorder: A meta-analysis. Clinical Psychology & Psychotherapy, 5, 126-144.
