@@ -1,14 +1,22 @@
 ---
-title: "Analiza"
-author: Agnieszka
+title: "Meta-analysis"
+format: html
 ---
 
 ```{r}
-library(tidyverse)
+# właściwa analiza do włączenia do artykułu
+# sprzątanie danych przeniosłem do pliku 'tidy.data.qmd'
+```
+
+```{r}
+#| label: setup
+
+load("data.rds")
 ```
 
 
 ```{r}
+<<<<<<< HEAD
 # wczytanie danych
 
 data = readxl::read_xlsx('Meta 2.1.xlsx', sheet = 3)
@@ -147,12 +155,17 @@ data = data %>%
                    starts_with('n'))), as.integer) %>%
   mutate(SMD = as.numeric(SMD)) %>%
   relocate(effect_coef, .before = 'effect_size')
+=======
+# tu zaczynamy :-)
+>>>>>>> 1e3948f0983419291db70b2299d67fc48c160718
 
+# dane ilościowe
 data %>% janitor::tabyl(sd_prosoc)
 data %>% janitor::tabyl(sd_con)
 data %>% janitor::tabyl(m_con)
 data %>% janitor::tabyl(m_prosoc)
 
+<<<<<<< HEAD
 data = data %>%
   mutate(sd_prosoc = str_replace(sd_prosoc, '=,', '=0,')) %>% 
   mutate_at(vars(starts_with('sd_')), ~str_remove_all(.x, '95%ci=')) %>%
@@ -163,19 +176,16 @@ data = data %>%
 ```{r}
 # transformacja danych # etykietowanie zmiennych jakościowych
 
+=======
+# dane jakościowe
+>>>>>>> 1e3948f0983419291db70b2299d67fc48c160718
 data %>% janitor::tabyl(plan) 
 data %>% janitor::tabyl(game_type) 
 data %>% janitor::tabyl(compared_game_type) 
 
-data = data %>%
-  mutate(plan = factor(if_else(plan == 'eksperyment', 'E', 'C')),
-         game_type = factor(if_else(game_type == 'video', 'V', 'O')),
-         compared_game_type = case_when(compared_game_type == 'competitve' ~ 'competitive',
-                                        compared_game_type == 'cooperetive' ~ 'cooperative',
-                                        TRUE ~ compared_game_type)) %>%
-  relocate(measured_construct, .before = game_name)
-
+# wyniki
 data %>% janitor::tabyl(group) 
+<<<<<<< HEAD
 data = data %>% 
   mutate(group = str_remove_all(group, '[(]|[)]|lat|[+]| imigranci') %>%
                  str_replace_all(c('  ' = ' ',
@@ -295,3 +305,9 @@ data = data %>%
 
 
 
+=======
+data %>% janitor::tabyl(test) 
+
+```
+
+>>>>>>> 1e3948f0983419291db70b2299d67fc48c160718
