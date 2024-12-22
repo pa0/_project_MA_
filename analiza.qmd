@@ -57,8 +57,9 @@ names(data) = c('bibitem',
                 'm_prosoc',
                 'sd_prosoc',
                 'measured_construct')
+```
 
-
+```{r}
 # podgląd danych
 
 View(data)
@@ -67,8 +68,10 @@ skimr::skim(data)
 summarytools::dfSummary(data) %>%
   summarytools::view(., footnote = '', custom.css = 'tiny_text.css', table.classes = 'tiny-text')
 kableExtra::kable_styling(knitr::kable(data), font_size = 8)
+```
 
 
+```{r}
 # transformacja danych # dane o artykułach (czyszczenie + dodanie ważnych kolumn)
 
 data %>%
@@ -130,8 +133,10 @@ data = data %>%
                                 first_author,
                                 str_sub(first_author, 1, str_locate(first_author, ',')[,1] - 1))) %>%
   mutate_at(vars(c(first_author, title)), str_to_title) 
+```
 
 
+```{r}
 # transformacja danych # zmiana typów zmiennych ilościowych
 
 data = data %>%
@@ -152,8 +157,10 @@ data = data %>%
   mutate(sd_prosoc = str_replace(sd_prosoc, '=,', '=0,')) %>% 
   mutate_at(vars(starts_with('sd_')), ~str_remove_all(.x, '95%ci=')) %>%
   mutate_at(vars(matches('^sd_|^m_')), ~as.numeric(str_replace_all(.x, ',', '.')))
-  
+```
 
+
+```{r}
 # transformacja danych # etykietowanie zmiennych jakościowych
 
 data %>% janitor::tabyl(plan) 
@@ -189,8 +196,10 @@ data = data %>%
                            group == 'studenci' ~ 'S',       # students
                            group == 'dorośli' ~ 'A') %>%    # adults
                   factor(levels = c('C', 'Y', 'S', 'A')))  
+```
   
-
+  
+```{r}
 # transformacja danych # czyszczenie testów statystycznych
 
 data %>% janitor::tabyl(test) 
@@ -225,9 +234,11 @@ data = data %>%
                              ',' = '.',
                              ';' = ',',
                              'se=(\\d+),(\\d+)  p<(\\d+),(\\d+)' = 'p<(\\d+),(\\d+) se=(\\d+),(\\d+)')) %>%
-                  str_trim()) 
+                  str_trim(),
+         test = str_trim(str_remove_all(test, '\\([^)]*\\)')))
+```
 
-
+```{r}
 # podgląd danych
 
 View(data)
@@ -236,8 +247,10 @@ skimr::skim(data)
 summarytools::dfSummary(data) %>%
   summarytools::view(., footnote = '', custom.css = 'tiny_text.css', table.classes = 'tiny-text')
 kableExtra::kable_styling(knitr::kable(data), font_size = 8)
+```
 
 
+```{r}
 # transformacja danych # rozwinięcie testów statystycznych (do dalszej obróbki)
 
 data$test %>%
@@ -254,20 +267,31 @@ data = data %>%
                       str_sub(z,1,2) == 'd=' ~ 'd',
                       TRUE ~ 'o'))));
           y}),
-          function(w) w[order(factor(names(w), levels = c('p', 'stat', 'stat_2', 'se', 'd', 'o')))])) %>%
-  unnest_wider(test_list, names_sep = '.', names_repair = 'universal') %>% 
-  rename(test_list.d = test_list.d...38) %>% select(-test_list.d...39) %>%      # linijka do ostatniej obserwacji do pozbycia w przyszłości
-  relocate(str_c('test_list.', c('p', 'stat', 'stat_2', 'se', 'd', 'o')), .after = 'test') 
-
-
-# robocze:
-data %>%
-  mutate(test_list = 
-           lapply(lapply(data$test, function(x) {y = str_split(x, ' ');
+          function(w) w[order(factor(names(w), levels = c('p', 'stat', 'stat_2', 'se', 'd', 'o')))]),
+         test_list_c = 
+           lapply(lapply(test, function(x) {y = str_split(x, ' ');
            y = structure(y[[1]], names = c(sapply(y[[1]], function(z)
              if_else(str_sub(z,1,2) %in% c('p=', 'p<', 'p>', 'z=', 't(', 't=', 'f(', 'f=', 'ch', 'ci', 'se', 'sd', 'd='), str_sub(z,1,1), 'o'))));
            y}),
-           function(w) w[order(factor(names(w), levels =  c('p', 'z', 't', 'f', 'c', 's', 'd', 'o')))])) 
+           function(w) w[order(factor(names(w), levels = c('p', 'z', 't', 'f', 'c', 's', 'd', 'o')))]),
+         test_list_c = lapply(test_list_c, function(x) {y = str_split(x, '[<=>]');
+                                                        sapply(y, function(z) structure(ifelse(length(z) == 2, as.numeric(z[2]), z[1]),
+                                                                                        names = ifelse(length(z) == 2, z[1], 'o')))}),                             
+         test_list_o = lapply(test_list, function(x) {y = str_split(x, '[<=>]');
+                                                      structure(sapply(y, function(z) ifelse(length(z) == 2, as.numeric(z[2]), z[1])), names = names(x))})         
+         ) %>%
+  mutate(test_list_copy = test_list) %>%
+  unnest_wider(test_list, names_sep = '.', names_repair = 'universal') %>% 
+  rename(test_list = test_list_copy,
+         test_list.d = test_list.d...38) %>% select(-test_list.d...39) %>%                                                                                         
+  relocate(str_c('test_list.', c('p', 'stat', 'stat_2', 'se', 'd', 'o')), .after = 'test') %>%
+  mutate(across(starts_with('test_list.'), function(x) {y = str_split(x, '[<=>]');
+                                                        sapply(y, function(z) structure(ifelse(length(z) == 2, as.numeric(z[2]), z[1]),
+                                                                                        names = ifelse(length(z) == 2, z[1], 'o')))}),
+         across(starts_with('test_list.') & !ends_with('.o'), function(x) structure(as.numeric(x), names = names(x))))
 
-
+# uwzględnić w p: =,>,<
 ```
+
+
+
