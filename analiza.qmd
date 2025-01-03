@@ -14,7 +14,7 @@ load('data.rds')
 ```
 
 ```{r}
-load("data.rds")
+library(tidyverse)
 ```
 
 
@@ -303,113 +303,48 @@ data = data %>%
 ```
 
 
-```{r}
-
-effectsize::z_to_d(z, n, ...)
-
-effectsize::t_to_d(t, df_error, pooled = FALSE, ...)
-effectsize::F_to_d(f, df, df_error, pooled = FALSE, ...)
-
-effectsize::chisq_to_cramers_v(chisq, n, nrow, ncol, ci = 0.95, adjust = FALSE, ...)  
-
-# brakuje m_d i chi_d
-
-```
-
-```{r}
-
-compute.es::tes(t, n.1, n.2, level = 95, cer = 0.2, dig = 2, verbose = TRUE, id=NULL, data=NULL)
-compute.es::fes(f, n.1, n.2, level = 95, cer = 0.2, dig = 2, verbose = TRUE, id=NULL, data=NULL)
-
-compute.es::mes(m.1, m.2, sd.1, sd.2, n.1, n.2, level = 95, cer = 0.2, dig = 2, verbose = TRUE, id=NULL, data=NULL) # means
-compute.es::mes2(m.1, m.2, s.pooled, n.1, n.2, level = 95, cer = 0.2, dig = 2, verbose = TRUE, id=NULL, data=NULL)  # means with pooled SD
-
-compute.es::chies(chi.sq, n, level = 95, cer = 0.2, dig = 2, verbose = TRUE, id=NULL, data=NULL)
-compute.es::res(r, var.r = NULL, n, level = 95, cer = 0.2, dig = 2, verbose = TRUE, id=NULL, data=NULL)
-
-# brakuje z
-
-```
-
-```{r}
-
-MAc::t_to_d(t, n.1, n.2)
-MAc::f_to_d(f, n.1, n.2)
-
-MAc::mean_to_d(m.1, m.2, sd.1, sd.2, n.1, n.2)  # means
-MAc::mean_to_d2(m.1, m.2, s.pooled, n.1, n.2)   # means with pooled SD
-
-MAc::r_from_chi(chi.sq, n)
-MAc::r_to_d(r, N) 
-
-# brakuje z
-# chi_d na około
-
-MAd::t_to_d(t, n.1, n.2)
-MAd::f_to_d(f, n.1, n.2)
-
-MAd::mean_to_d(m.1, m.2, sd.1, sd.2, n.1, n.2)  # means
-MAd::mean_to_d2(m.1, m.2, s.pooled, n.1, n.2)   # means with pooled SD
-
-MAd::r_from_chi(chi.sq, n)
-MAd::r_to_d(r, N) 
-
-```
-
-```{r}
-
-esc::esc_t(t, p, totaln, grp1n, grp2n, es.type = c("d", "g", "or", "logit", "r", "f", "eta", "cox.or", "cox.log"), study = NULL, ...)
-esc::esc_f(f, totaln, grp1n, grp2n, es.type = c("d", "g", "or", "logit", "r", "f", "eta", "cox.or", "cox.log"), study = NULL, ...)
-  
-esc::esc_mean_sd(grp1m, grp1sd, grp1n, grp2m, grp2sd, grp2n, totalsd, r,
-  es.type = c("d", "g", "or", "logit", "r", "cox.or", "cox.log"), study = NULL)
-esc::esc_mean_se(grp1m, grp1sd, grp1n, grp2m, grp2se, grp2n, r,
-  es.type = c("d", "g", "or", "logit", "r", "cox.or", "cox.log"), study = NULL)
-
-esc::esc_chisq(chisq, p, totaln, es.type = c("d", "g", "or", "logit", "r", "f", "eta", "cox.or", "cox.log"), study = NULL)
-esc::esc_phi(phi, p, totaln, es.type = c("d", "g", "or", "logit", "r", "f", "eta", "cox.or", "cox.log"), study = NULL)
-esc::esc_rpb(r, p, totaln, grp1n, grp2n, es.type = c("d", "g", "or", "logit", "f", "eta", "cox.or", "cox.log"), study = NULL) # point-biserial correlations
-  
-```
-
-```{r}
-
-metaConvert::es_from_fisher_z(fisher_z, n_sample, unit_type = "raw_scale", n_exp, n_nexp, cor_to_smd = "viechtbauer", sd_iv, unit_increase_iv, reverse_fisher_z)
-
-metaConvert::es_from_student_t(student_t, n_exp, n_nexp, smd_to_cor = "viechtbauer", reverse_student_t)
-metaConvert::es_from_student_t_pval(student_t_pval, n_exp, n_nexp, smd_to_cor = "viechtbauer", reverse_student_t_pval)
-metaConvert::es_from_anova_f(anova_f, n_exp, n_nexp, smd_to_cor = "viechtbauer", reverse_anova_f)
-metaConvert::es_from_anova_pval(anova_f_pval, n_exp, n_nexp, smd_to_cor = "viechtbauer", reverse_anova_f_pval)
-
-metaConvert::es_from_means_sd(mean_exp, mean_sd_exp, mean_nexp, mean_sd_nexp, n_exp, n_nexp, smd_to_cor = "viechtbauer", reverse_means)
-metaConvert::es_from_means_sd_pooled()
-metaConvert::es_from_means_se()
-metaConvert::es_from_means_ci(mean_exp, mean_ci_lo_exp, mean_ci_up_exp, mean_nexp, mean_ci_lo_nexp, mean_ci_up_nexp, n_exp, n_nexp, smd_to_cor = "viechtbauer", max_asymmetry = 10, reverse_means)
-
-
-metaConvert::es_from_chisq(chisq, n_sample, n_cases, n_exp, yates_chisq = FALSE, reverse_chisq)
-metaConvert::es_from_chisq_pval(chisq_pval, n_sample, n_cases, n_exp, yates_chisq = FALSE, reverse_chisq_pval)
-metaConvert::es_from_phi(phi, n_cases, n_exp, n_sample, reverse_phi)
-metaConvert::es_from_pearson_r(pearson_r, sd_iv, n_sample, n_exp, n_nexp, cor_to_smd = "viechtbauer", unit_increase_iv, unit_type = "raw_scale", reverse_pearson_r)
-metaConvert::es_from_pt_bis_r(pt_bis_r, n_exp, n_nexp, smd_to_cor = "viechtbauer", reverse_pt_bis_r)   # point-biserial correlations
-
-```
-
-```{r}
-
-MetaUtility::r_to_d(r, sx, delta, N = NA, Ns = N, sx.known = FALSE) 
-metafor::transf.rpbtod(xi, n1i, n2i)                                            # point-biserial correlations
-
-```
-
-
-
 
 ```{r}
 
 ifelse(names(data$test_list.stat) == 't', effectsize::t_to_d(data$test_list.stat, df_error = data$n_con)[,1], data$test_list.stat)
 ifelse(names(data$test_list.stat) == 't', MAc::t_to_d(data$test_list.stat, data$n_con, data$n_prosoc)[1], data$test_list.stat)
 ifelse(names(data$test_list.stat) == 't', MAc::t_to_d(data$test_list.stat, data$n_con, data$n_prosoc)[1], NA)
+
 ```
+
+```{r}
+
+names(data$test_list.stat) %>% table
+
+```
+```{r}
+
+data %>%
+  janitor::tabyl(test_list.stat)
+
+```
+
+```{r}
+
+data = data %>%
+  mutate(test_stat = names(test_list.stat), 
+         my_SMD = case_when(test_stat == 'z'   ~ effectsize::z_to_d(test_list.stat, n = n)$d,
+                            test_stat == 't'   ~ esc::esc_t(test_list.stat, totaln = n)$es,
+                            test_stat == 'f'   ~ esc::esc_f(test_list.stat, totaln = n)$es,
+                            test_stat == 'chi' ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
+                            TRUE ~ NA))
+
+# CI jest dla bety w regresji, są one w artykule razem z p; t = beta/SE(beta); SE(beta) = sqrt((RSS/var(x))*(1/n-2);
+# trzeba więc wziąć oba i z p znaleźć t
+
+```
+
+
+
+
+
+
+
+
 
 
