@@ -79,7 +79,7 @@ effectsize::r_to_d(r, n1, n2, ...)                                              
 ## z
 
 2 * 3.2 / sqrt(30) 
-effectsize::z_to_d(3.2, 30)$d 
+effectsize::z_to_d(3.2, 30)$d                                                   # efekt taki sam jak dla t, ale inne przedziały ufności
 
 # 2 * tanh(3.2) / (9.083685 * sqrt(1 - tanh(3.2)**2))
 # 1 * tanh(3.2) / (4.541842 * sqrt(1 - tanh(3.2)**2))
@@ -100,7 +100,7 @@ effectsize::t_to_d(3.2, 30)$d
 
 ## f
 
-sqrt(3.2 * ((15 + 15)/(15 * 15)))
+2 * sqrt(3.2) / sqrt(30)
 compute.es::fes(3.2, 15, 15, verbose = F, dig = 7)$d
 esc::esc_f(3.2, totaln = 30)$es
 MAc::f_to_d(3.2, 15, 15)[,'d']
@@ -118,7 +118,7 @@ sqrt(3.2/30)
 2 * effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi / sqrt(1 - effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi**2)
 esc::esc_chisq(3.2, totaln = 30)$es                                 
 esc::esc_phi(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, totaln = 30)$es 
-esc::esc_rpb(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, totaln = 30)$es # gdy są podane nierówne grupy wyniki powinny być inne
+esc::esc_rpb(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, totaln = 30)$es # gdy są podane nierówne grupy wyniki są inne
 compute.es::res(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, n = 30, verbose = F, dig = 7)$d
 
 # effectsize(na około) - 0.667661
@@ -131,7 +131,6 @@ sqrt(4) * r / sqrt(1 - r**2)
 sqrt(h) * r / sqrt(1 - r**2)
 effectsize::r_to_d(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, 15, 15)   
 metaConvert::es_from_pt_bis_r(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, 15, 15)$d
-p
 
 # es, MAd, MAc - 0.6794789
 2 * abs(sqrt(3.2/30)) / sqrt(1 - 3.2/30) * sqrt((30 - 1)/30)                    # zmodyfikowane r->d (* sqrt((n - 1)/n)
@@ -140,15 +139,11 @@ MAc::r_to_d(MAc::r_from_chi(3.2, 30), 30)
 MAd::r_to_d(MAd::r_from_chi(3.2, 30), 30)
 MAd::r_to_d(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, 30)
 
-h2 = (n1 + n2)**2 /n1/n2
-d2 = sqrt(h2) * r / sqrt(1 - r**2)
-d2
-
 # metaConvert - 0.7643041, 0.5548455(?)
 metaConvert::es_from_chisq(3.2, 30, 15, 15, yates_chisq = F)$d                               # (*) - d nie z phi, a z log(OR)
 metaConvert::es_from_phi(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, 15, 15, 30)$d    # (*) 
 
-metaConvert::es_from_pearson_r(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, n_sample = 30, n_exp = 15, n_nexp = 15)$d    
+metaConvert::es_from_pearson_r(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, n_sample = 30, n_exp = 15, n_nexp = 15)$d    # https://en.wikipedia.org/wiki/Delta_method; https://rdrr.io/cran/metafor/man/conv.delta.html
 
 # różne, z poprawką Yate - 0.5389365, 0.5578523, 0.5578523, 0.7643041
 effectsize::r_to_d(effectsize::chisq_to_phi(3.2, 30, adjust = T)$phi, 15, 15)   
@@ -190,8 +185,107 @@ MAd::mean_to_d(3, 2, 1 * sqrt(15 - 1), 1.5 * sqrt(15 - 1), 15, 15)[,'d']
 metaConvert::es_from_means_se(3, 1, 2, 1.5, 15, 15)$d                   
 
 
+###  gdy n1 != n2:
 
-### podsumowując - najlepsze jest esc, a "z" najlepsze z effectsize
+## z
+
+metaConvert::es_from_fisher_z(3.2, n_exp = 13, n_nexp = 17)$d                                        
+metaConvert::es_from_pearson_r(esc::convert_z2r(3.2), n_exp = 13, n_nexp = 17)$d
+metaConvert::es_from_pearson_r(tanh(3.2), n_exp = 13, n_nexp = 17)$d
+
+## t
+
+3.2 * sqrt(1/13 + 1/17)
+compute.es::tes(3.2, 13, 17, verbose = F, dig = 6)$d
+esc::esc_t(3.2, grp1n = 13, grp2n = 17)$es
+MAc::t_to_d(3.2, 13, 17)[,'d']
+MAd::t_to_d(3.2, 13, 17)[,'d']
+metaConvert::es_from_student_t(3.2, 13, 17, smd_to_cor = 'viechtbauer')$d
+metaConvert::es_from_student_t(3.2, 13, 17, smd_to_cor = 'lipsey_cooper')$d
+
+2 * 3.2 / sqrt(30)
+effectsize::t_to_d(3.2, 30)$d
+
+## f
+
+sqrt(3.2 * (1/13 + 1/17))
+compute.es::fes(3.2, 13, 17, verbose = F, dig = 7)$d
+esc::esc_f(3.2, grp1n = 13, grp2n = 17)$es
+MAc::f_to_d(3.2, 13, 17)[,'d']
+MAd::f_to_d(3.2, 13, 17)[,'d']
+metaConvert::es_from_anova_f(3.2, 13, 17, smd_to_cor = 'viechtbauer')$d
+metaConvert::es_from_anova_f(3.2, 13, 17, smd_to_cor = 'lipsey_cooper')$d
+
+2 * sqrt(3.2) / sqrt(30)
+effectsize::F_to_d(3.2, 1, 30)$d
+
+## chi
+
+# esc
+r = effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi
+n1 = 13; n2 = 17
+(n1 + n2)/n1 + (n1 + n2)/n2
+h = 1/(n1*n2/(n1 + n2)**2)
+h
+4
+sqrt(h) * r / sqrt(1 - r**2)                                                    #  zmodyfikowane h, dostosowane do n1 != n2
+esc::esc_rpb(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, grp1n = 13, grp2n = 17)$es 
+
+# effectsize
+h = (n1 + n2 - 2) / n1 + (n1 + n2 - 2) / n2                                     # z -2 przy n
+h
+4
+sqrt(h) * r / sqrt(1 - r**2)                                                    
+effectsize::r_to_d(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, 13, 17)  
+metaConvert::es_from_pt_bis_r(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, 13, 17)$d
+
+# metaConvert
+metaConvert::es_from_chisq(3.2, 30, 13, 17, yates_chisq = F)$d                               # (*) - d nie z phi, a z log(OR) - jedyna opcja tutaj przeznaczona w teorii do phi, a nie point biserial correlations, ew. r Pearsona
+metaConvert::es_from_phi(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, 13, 17, 30)$d    # (*) 
+
+metaConvert::es_from_pearson_r(effectsize::chisq_to_phi(3.2, 30, adjust = F)$phi, n_sample = 30, n_exp = 13, n_nexp = 17)$d    
+
+## m, sd unpooled 
+
+(3 - 2)/sqrt((1**2 * (13 - 1) + 1.5**2 * (17 - 1))/(13 + 17 - 2))               # sd pooled jest dopiero obliczane
+compute.es::mes(3, 2, 1, 1.5, 13, 17, verbose = F, dig = 7)$d
+MAc::mean_to_d(3, 2, 1, 1.5, 13, 17)[,'d']
+MAd::mean_to_d(3, 2, 1, 1.5, 13, 17)[,'d']
+metaConvert::es_from_means_sd(3, 1, 2, 1.5, 13, 17)$d
+esc::esc_mean_sd(3, 1, 13, 2, 1.5, 17)$es
+
+## m, sd pooled
+
+(3 - 2)/1.75                                                                    # d się nie zmieni dla sd pooled, gdy n1 != n2, ale wariancje d i inne już tak
+compute.es::mes2(3, 2, 1.75, 13, 17, verbose = F, dig = 7)$d
+MAc::mean_to_d2(3, 2, 1.75, 13, 17)[,'d']
+MAd::mean_to_d2(3, 2, 1.75, 13, 17)[,'d']
+metaConvert::es_from_means_sd_pooled(3, 2, 1.75, 13, 17)$d
+esc::esc_mean_sd(grp1m = 3, grp1n = 13, grp2m = 2, grp2n = 17, grp1sd = 1.75, grp2sd = 1.75)$es  # pooled sd można sprowadzić do sd_pooled = sd_1 = sd_2 
+
+(3 - 2)/sqrt((1.75**2 * (30 - 1) - ((1**2 * 13 * 17) / 30)) / (30 - 1))                          # Wilson, 2016; https://github.com/strengejacke/esc/blob/master/R/esc_mean_sd.R
+# Wilson, 2017, str.12; gdy powyższy mianownik ujemny, to użyty jest ten wzór: (totalsd^2 * (totaln - 1) - ((grp1m^2 + grp2m^2 - 2 * grp1m * grp2m) / totaln)) / totaln
+esc::esc_mean_sd(grp1m = 3, grp1n = 13, grp2m = 2, grp2n = 17, totalsd = 1.75)$es                # total sd to sd całej próby (c(grp1, grp2)); gdy nie znamy sd_1, sd_2
+
+## m, se 
+
+(3 - 2)/sqrt(((1 * sqrt(13 - 1))**2  * (13 - 1) + (1.5 * sqrt(17 - 1))**2 * (17 - 1))/(13 + 17 - 2))
+compute.es::mes(3, 2, 1 * sqrt(13 - 1), 1.5 * sqrt(17 - 1), 13, 17, verbose = F, dig = 7)$d
+MAc::mean_to_d(3, 2, 1 * sqrt(13 - 1), 1.5 * sqrt(17 - 1), 13, 17)[,'d']
+MAd::mean_to_d(3, 2, 1 * sqrt(13 - 1), 1.5 * sqrt(17 - 1), 13, 17)[,'d']
+esc::esc_mean_se(3, 1, 13, 2, 1.5, 17)$es
+
+(3 - 2)/sqrt(((1 * sqrt(13))**2  * (13 - 1) + (1.5 * sqrt(17))**2 * (17 - 1))/(13 + 17 - 2))  # zmodyfikowane n (n - 1->n)
+metaConvert::es_from_means_se(3, 1, 2, 1.5, 13, 17)$d
+
+
+
+### Podsumowując:
+#
+#   Najlepsze ogółem jest esc, dla "z" najlepsze jest effectsize, a jeśli chcemy konwersję "z Fishera", to tylko z metaConvert.
+#   Gdy są nierówne próby, to "z" lepiej zastąpić przez "t" z esc (bo effectsize nie pozwala na nierówne grupy).
+#                             "chi" można liczyć z esc dla ujednolicenia, ale to effectsize jest dokładniejsze - ma n z odjętymi stopniami swobody (które w esc wszędzie są pominięte),
+#                             a "z Fishera" dalej można tylko z metaConvert.
 
 
 
@@ -228,7 +322,7 @@ d = cont_table$di
 n1 = a + b
 n2 = c + d
 
-or = n_cases_exp * n_controls_nexp /(n_controls_exp * n_cases_nexp)                               # d nie jest liczone z phi, a z log(OR); # wzór jest m.in. w Wilson, 2017, str. 19
+or = n_cases_exp * n_controls_nexp /(n_controls_exp * n_cases_nexp)                               # d nie jest liczone z phi, a z log(OR); wzór jest m.in. w Wilson, 2017, str. 19
 log(or) * sqrt(3)/pi
 
 
