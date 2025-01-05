@@ -299,45 +299,15 @@ data = data %>%
                                                                                         names = ifelse(length(z) == 2, z[1], 'o')))}),
          across(starts_with('test_list.') & !ends_with('.o'), function(x) structure(as.numeric(x), names = names(x))))
 
-# uwzględnić w p: =,>,<
+# można by jeszcze uwzględnić w p: =,>,<
 ```
 
-
-
-```{r}
-
-ifelse(names(data$test_list.stat) == 't', effectsize::t_to_d(data$test_list.stat, df_error = data$n_con)[,1], data$test_list.stat)
-ifelse(names(data$test_list.stat) == 't', MAc::t_to_d(data$test_list.stat, data$n_con, data$n_prosoc)[1], data$test_list.stat)
-ifelse(names(data$test_list.stat) == 't', MAc::t_to_d(data$test_list.stat, data$n_con, data$n_prosoc)[1], NA)
-
-```
 
 ```{r}
 
 names(data$test_list.stat) %>% table
-
-```
-```{r}
-
 data %>%
   janitor::tabyl(test_list.stat)
-
-```
-
-```{r}
-
-data = data %>%
-  mutate(test_stat = ifelse(!is.na(test_list.stat), names(test_list.stat), NA),
-         my_SMD = case_when(test_stat == 'z'   ~ effectsize::z_to_d(test_list.stat, n = n)$d,
-                            test_stat == 't'   ~ esc::esc_t(test_list.stat, totaln = n)$es,
-                            test_stat == 'f'   ~ esc::esc_f(test_list.stat, totaln = n)$es,
-                            test_stat == 'chi' ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
-                            TRUE ~ NA))
-
-# CI jest dla bety w regresji, są one w artykule razem z p; t = beta/SE(beta); SE(beta) = sqrt((RSS/var(x))*(1/n-2);
-# d = beta / s_pooled lub beta = beta * sy/sx (x = sqrt(n1 − n1**2/N)/ (N − 1)) i dopiero d = ... (1 - beta standaryzowane, 2 - beta niewystandardowane)
-# lub wziąć p i znaleźć t
-
 ```
 
 ```{r}
@@ -350,25 +320,36 @@ fix(data2)
 # 0 - n = n1 + n2, n1 = n2
 # 1 - n = n1 + n2, n1 != n2 
 # 2 - n = n1, n2 = NA
-# 3 - n != n1 + n2    (sprawdzić w artykule czemu)
+# 3 - n != n1 + n2  -> w artykule nie ma wyjaśnienia czemu, więc lepiej przyjąć n1= n2 = n/2
 # 4 - n1 = n2 = NA
 
-# sprawdzić co powinno być n
-# zmienić CI na beta na T i to na d
-# niektóre jeśli mają m, sd policzyć z nich zamiast ze statystyk
+# do przypadku 3
+data = data %>%
+  mutate(across(starts_with('n_'), ~ ifelse(str_sub(cite, 1, 24) == 'tountopoulou2021training', n/2, .x)))
 
-data %>%
+# dla przypadków 0,1,3 
+data = data %>%
   mutate(test_stat = ifelse(!is.na(test_list.stat), names(test_list.stat), NA),
-         my_SMD = case_when(n_con == n_prosoc & test_stat == 'z'   ~ effectsize::z_to_d(test_list.stat, n = n)$d,
+         SMD_R = case_when(if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x)) ~
+                              metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n_prosoc, n_con)$d,  # metaConvert, bo esc ma taką budowę, że nie można użyć gdy są braki w kolumnach
+                            n_con == n_prosoc & test_stat == 'z'   ~ effectsize::z_to_d(test_list.stat, n = n)$d,
                             n_con == n_prosoc & test_stat == 't'   ~ esc::esc_t(test_list.stat, totaln = n)$es,
                             n_con == n_prosoc & test_stat == 'f'   ~ esc::esc_f(test_list.stat, totaln = n)$es,
                             n_con == n_prosoc & test_stat == 'chi' ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
-                            sum(is.na(c(n_con, n_prosoc))) == 0 & n_con != n_prosoc & test_stat == 't'   ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,  
-                            sum(is.na(c(n_con, n_prosoc))) == 0 & n_con != n_prosoc & test_stat == 'f'   ~ esc::esc_f(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,
-                            sum(is.na(c(n_con, n_prosoc))) == 0 & n_con != n_prosoc & test_stat == 'chi' ~ esc::esc_rpb(test_list.stat, grp1n = n_prosoc, grp2n = n_con, totaln = n)$es,
-                            TRUE ~ NA))
+                            n_con != n_prosoc & test_stat == 't'   ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,  
+                            n_con != n_prosoc & test_stat == 'f'   ~ esc::esc_f(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,
+                            n_con != n_prosoc & test_stat == 'chi' ~ esc::esc_rpb(test_list.stat, grp1n = n_prosoc, grp2n = n_con, totaln = n)$es,
+                            TRUE ~ NA)) 
 
-# powyższe w teorii zajmuje się przypadkami 0,1,3; w teorii, bo dla n1 != n2 coś tutaj nie zadziałało, do poprawy
+# dla przypadków 2,4
+# ...
+
+
+# 1. sprawdzić co powinno być n w przypadkach 2 i 4
+# 2. zmienić CI na beta na T i to na d, bo:
+#   CI jest dla bety w regresji, są one w artykule razem z p; t = beta/SE(beta); SE(beta) = sqrt((RSS/var(x))*(1/n-2);
+#   d = beta / s_pooled lub beta = beta * sy/sx (x = sqrt(n1 − n1**2/N)/ (N − 1)) i dopiero d = ... (1 - beta standaryzowane, 2 - beta niewystandardowane)
+#   lub wziąć p i znaleźć t
 
 ```
 
