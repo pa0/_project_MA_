@@ -212,6 +212,7 @@ data = data %>%
 # transformacja danych # czyszczenie testów statystycznych
 
 data %>% janitor::tabyl(test) 
+
 data = data %>% 
   mutate(test = na_if(test, 's') %>%
                   str_to_lower() %>%
@@ -330,35 +331,51 @@ data = data %>%
     mutate(across(starts_with('n_'), ~ ifelse(cite == 'shaza2021impact_a', n/2, .)),
            across(starts_with('n'),
                   ~ ifelse(cite == 'charewicz2019effects_b', c(n = 103, n_prosoc = round(103 * 51/106), n_con = round(103 * 55/106))[cur_column()], .)))  # z df w artykule wynika, że odrzucono 3 osoby, ale nie wynika z których grup, więc zakładam proporcjonalnie sprzed odrzucenia
-# pozostałe 4 są całe testy i statystyki do uzupełnienia
+# pozostałe przypadki 4 są całe testy i statystyki do uzupełnienia
 
 # dla przypadku 2
 data = data %>%                                                                
-    mutate(n_con = ifelse(cite == 'morschheuser2017how_a', NA, n_con),
-           test_list.stat = structure(ifelse(cite == 'morschheuser2017how_a', unname(effect_size / ((test_list.stat_2 - test_list.stat)/2/qt(0.975, n - 2))), test_list.stat),
-                                       names = ifelse(cite == 'morschheuser2017how_a', 't', names(test_list.stat))),
-           test_list.stat_2 = NULL)
-# pozostałe 2 do sprawdzenia
+    mutate(test_list.stat = structure(ifelse(cite == 'morschheuser2017how_a', unname(effect_size / ((test_list.stat_2 - effect_size)/qt(0.975, n - 2))), test_list.stat),
+                                      names = ifelse(cite == 'morschheuser2017how_a', 't', names(test_list.stat))),
+           test_list.stat_2 = NULL,
+           n_con = ifelse(!is.na(n_con) & is.na(n_prosoc), NA, n_con))
+  
+# ogólne poprawy
+data = data %>%  
+  mutate(n = ifelse(cite == 'parsons2019prosocial_a', 71,
+             ifelse(cite == 'jin2017when_c',          93, n)))
+  
+# coyne2016super_a, coyne2016super_b - za mało danych
+# kaufman2015psychologically_a,     18, 19
+# kaufman2015psychologically_c, 32, 16, 16
+# boduszek2019prosocial_a, 168, NA, NA, m,sd=NA
+# boduszek2019prosocial_b, 168, NA, NA, m,sd=NA
+# lobel2016 - n=194, p=0.389 -> t = ...  (beta pominięcie - przydatne tylko do znaku)
+# parsons2018validation_a - 76, 76, 76
+# parsons2018validation_b - 109, 109, 109
+# beene2015effect_a - 55, 55, 55; nie wiem skąd wytrzaśnięte m i sd; nie wiem jak policzyć
+# beene2015effect_b - 55, 55, 55; [nie wiem czy ten test też się tego nie tyczy: F(1, 52) = 0.27, p = 0.609]
+
+
+# shaza2021impact - nie wiem skąd wytrzaśnięte m i sd
+
 
 # dla przypadków 0,1 (w tym 3,4) 
 data = data %>%
-  mutate(test_stat = ifelse(!is.na(test_list.stat), names(test_list.stat), NA),
-         SMD_R = case_when(if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x)) ~
+  mutate(test_stat = ifelse(effect_coef == 'r', 'r', ifelse(!is.na(test_list.stat), names(test_list.stat), NA)),
+         SMD_R = case_when(effect_coef == 'r'                                                           ~ esc::esc_rpb(effect_size, totaln = n)$es,
+                           if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x)) ~
                               metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n_prosoc, n_con)$d,  # metaConvert, bo esc ma taką budowę, że nie można użyć gdy są braki w kolumnach
-                            n_con != n_prosoc & test_stat == 't'   ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,  
-                            n_con != n_prosoc & test_stat == 'f'   ~ esc::esc_f(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,
-                            n_con != n_prosoc & test_stat == 'chi' ~ esc::esc_rpb(test_list.stat, grp1n = n_prosoc, grp2n = n_con, totaln = n)$es,
-                            n_con == n_prosoc & test_stat == 'z'   ~ effectsize::z_to_d(test_list.stat, n = n)$d,
-                            n_con == n_prosoc & test_stat == 't'   ~ esc::esc_t(test_list.stat, totaln = n)$es,
-                            n_con == n_prosoc & test_stat == 'f'   ~ esc::esc_f(test_list.stat, totaln = n)$es,
-                            n_con == n_prosoc & test_stat == 'chi' ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
-                            is.na(n_con) & is.na(n_prosoc) & test_stat == 't' ~ esc::esc_t(test_list.stat, totaln = n)$es,
+                            n_con != n_prosoc & test_stat == 't'                                        ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,  
+                            n_con != n_prosoc & test_stat == 'f'                                        ~ esc::esc_f(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,
+                            n_con != n_prosoc & test_stat == 'chi'                                      ~ esc::esc_rpb(test_list.stat, grp1n = n_prosoc, grp2n = n_con, totaln = n)$es,
+                            n_con == n_prosoc & test_stat == 'z'                                        ~ effectsize::z_to_d(test_list.stat, n = n)$d,
+                            (n_con == n_prosoc | (is.na(n_con) & is.na(n_prosoc))) & test_stat == 't'   ~ esc::esc_t(test_list.stat, totaln = n)$es,
+                            (n_con == n_prosoc | (is.na(n_con) & is.na(n_prosoc))) & test_stat == 'f'   ~ esc::esc_f(test_list.stat, totaln = n)$es,
+                            (n_con == n_prosoc | (is.na(n_con) & is.na(n_prosoc))) & test_stat == 'chi' ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
                             TRUE ~ NA)) 
 
-
 ```
-
-
 
 
 
