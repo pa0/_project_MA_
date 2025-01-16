@@ -331,35 +331,33 @@ data = data %>%
     mutate(across(starts_with('n_'), ~ ifelse(cite == 'shaza2021impact_a', n/2, .)),
            across(starts_with('n'),
                   ~ ifelse(cite == 'charewicz2019effects_b', c(n = 103, n_prosoc = round(103 * 51/106), n_con = round(103 * 55/106))[cur_column()], .)))  # z df w artykule wynika, że odrzucono 3 osoby, ale nie wynika z których grup, więc zakładam proporcjonalnie sprzed odrzucenia
-# pozostałe przypadki 4 są całe testy i statystyki do uzupełnienia
+# #pozostałe przypadki 4 są całe testy i statystyki do uzupełnienia#
 
 # dla przypadku 2
 data = data %>%                                                                
-    mutate(test_list.stat = structure(ifelse(cite == 'morschheuser2017how_a', unname(effect_size / ((test_list.stat_2 - effect_size)/qt(0.975, n - 2))), test_list.stat),
+    mutate(test_list.stat = structure(ifelse(cite == 'morschheuser2017how_a', unname(effect_size / ((test_list.stat_2 - effect_size)/qt(0.975, n - 3))), test_list.stat),    # chyba dobry test jest (β = 0.476, p < .001 (i chyba bet jest 3), ale tu brakuje SE
                                       names = ifelse(cite == 'morschheuser2017how_a', 't', names(test_list.stat))),
            test_list.stat_2 = NULL,
            n_con = ifelse(!is.na(n_con) & is.na(n_prosoc), NA, n_con))
   
 # ogólne poprawy
-data = data %>%  
-  mutate(n = ifelse(cite == 'parsons2019prosocial_a', 71,
-             ifelse(cite == 'jin2017when_c',          93, n)))
+data = data %>%
+  mutate(n = case_when(cite == 'parsons2019prosocial_a'       ~ 71,
+                       cite == 'jin2017when_c'                ~ 93,
+                       cite == 'parsons2018validation_a'      ~ 76,
+                       cite == 'parsons2018validation_b'      ~ 109,
+                       cite == 'saleme2020gamified_a'         ~ 164,
+                       cite == 'kaufman2015psychologically_c' ~ 32,
+                       TRUE                                   ~ n)) %>%
+  rows_update(data.frame(cite  = c('kaufman2015psychologically_a', 'kaufman2015psychologically_c', 'boduszek2019prosocial_a', 'boduszek2019prosocial_b'),
+                         n_con = c(18, 16, 86, 86), n_prosoc = c(19, 16, 86, 86)), by = 'cite') %>%
+  rows_update(data.frame(cite = 'shaza2021impact_a', m_con = (53.66 + 55.45)/2, sd_con = (18.14 + 19.16)/2, m_prosoc = (63.46 + 67.62)/2, sd_prosoc = (20.83 + 18.08)/2), by = 'cite') %>%
+  mutate(test_list.se   =   if_else(cite == 'wu2019promoting_a', c('se' = 0.07), test_list.se),
+         test_list.stat = case_when(cite == 'wu2019promoting_a' | cite == 'shoshani2021video_a' ~ c('t' = effect_size/test_list.se),
+                                    cite == 'lobel2016relation_a'                               ~ c('t' = sign(effect_size) * qt(1 - test_list.p/2, n - 9)),
+                                    TRUE                                                        ~ test_list.stat))
+
   
-# coyne2016super_a, coyne2016super_b - za mało danych
-# kaufman2015psychologically_a,     18, 19
-# kaufman2015psychologically_c, 32, 16, 16
-# boduszek2019prosocial_a, 168, NA, NA, m,sd=NA
-# boduszek2019prosocial_b, 168, NA, NA, m,sd=NA
-# lobel2016 - n=194, p=0.389 -> t = ...  (beta pominięcie - przydatne tylko do znaku)
-# parsons2018validation_a - 76, 76, 76
-# parsons2018validation_b - 109, 109, 109
-# beene2015effect_a - 55, 55, 55; nie wiem skąd wytrzaśnięte m i sd; nie wiem jak policzyć
-# beene2015effect_b - 55, 55, 55; [nie wiem czy ten test też się tego nie tyczy: F(1, 52) = 0.27, p = 0.609]
-
-
-# shaza2021impact - nie wiem skąd wytrzaśnięte m i sd
-
-
 # dla przypadków 0,1 (w tym 3,4) 
 data = data %>%
   mutate(test_stat = ifelse(effect_coef == 'r', 'r', ifelse(!is.na(test_list.stat), names(test_list.stat), NA)),
