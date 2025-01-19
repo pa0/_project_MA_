@@ -342,9 +342,17 @@ data = data %>%
   
 # ogólne poprawy
 data = data %>%
+<<<<<<< HEAD
   mutate(n = case_when(cite == 'wu2019promoting'              ~ 131,
                        cite == 'lobel2016relation_a'          ~ 184,
                        cite == 'parsons2019prosocial_a'       ~ 71,
+=======
+  mutate(n = case_when(cite == 'lobel2016relation_a'          ~ 184,
+                       cite == 'wu2019promoting'              ~ 131,
+                       cite == 'parsons2019prosocial_a'       ~ 71,
+                       cite == 'jin2017when_c'                ~ 96,
+                       cite == 'badatala2016effects_a'        ~ 30,
+>>>>>>> 6fc732a37cd5fdb64762298b6c751c4ff23a74b9
                        cite == 'parsons2018validation_a'      ~ 76,
                        cite == 'parsons2018validation_b'      ~ 109,
                        cite == 'jin2017when_c'                ~ 96,
@@ -354,11 +362,15 @@ data = data %>%
   rows_update(data.frame(cite     = c('jin2017when_c', 'badatala2016effects_a', 'kaufman2015psychologically_a', 'kaufman2015psychologically_c', 'boduszek2019prosocial_a', 'boduszek2019prosocial_b'),
                          n_con    = c(48, 15, 18, 16, 86, 86),
                          n_prosoc = c(48, 15, 19, 16, 86, 86)), by = 'cite') %>%
+<<<<<<< HEAD
   rows_update(data.frame(cite      = c('shaza2021impact_a', 'kaufman2015psychologically_c'),
                          m_con     = (53.66 + 55.45)/2,
                          sd_con    = (18.14 + 19.16)/2,
                          m_prosoc  = (63.46 + 67.62)/2,
                          sd_prosoc = c((20.83 + 18.08)/2, 1.09)), by = 'cite') %>%
+=======
+  rows_update(data.frame(cite = 'shaza2021impact_a', m_con = (53.66 + 55.45)/2, sd_con = (18.14 + 19.16)/2, m_prosoc = (63.46 + 67.62)/2, sd_prosoc = (20.83 + 18.08)/2), by = 'cite') %>%
+>>>>>>> 6fc732a37cd5fdb64762298b6c751c4ff23a74b9
   mutate(test_list.se   = if_else(cite == 'wu2019promoting_a', c('se' = 0.07), test_list.se),
          test_list.stat = structure(case_when(cite == 'wu2019promoting_a' | cite == 'shoshani2021video_a' ~ effect_size/test_list.se,
                                               cite == 'lobel2016relation_a'                               ~ sign(effect_size) * qt(1 - test_list.p/2, n - 9),
