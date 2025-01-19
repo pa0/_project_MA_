@@ -359,7 +359,6 @@ data = data %>%
                          sd_con    = (18.14 + 19.16)/2,
                          m_prosoc  = (63.46 + 67.62)/2,
                          sd_prosoc = c((20.83 + 18.08)/2, 1.09)), by = 'cite') %>%
-  rows_update(data.frame(cite = 'shaza2021impact_a', m_con = (53.66 + 55.45)/2, sd_con = (18.14 + 19.16)/2, m_prosoc = (63.46 + 67.62)/2, sd_prosoc = (20.83 + 18.08)/2), by = 'cite') %>%
   mutate(test_list.se   = if_else(cite == 'wu2019promoting_a', c('se' = 0.07), test_list.se),
          test_list.stat = structure(case_when(cite == 'wu2019promoting_a' | cite == 'shoshani2021video_a' ~ effect_size/test_list.se,
                                               cite == 'lobel2016relation_a'                               ~ sign(effect_size) * qt(1 - test_list.p/2, n - 9),
@@ -396,43 +395,4 @@ cor.test(abs(data$SMD_R), abs(data$SMD))       # korelacja 0.97
 View(data %>% relocate(SMD, SMD_calc, .after = 'SMD_R'))
 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
