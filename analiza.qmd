@@ -389,7 +389,7 @@ data = data %>%
                                   metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n/2, n/2)$d, 
                            n_con != n_prosoc & test_stat == 't'                                        ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,  
                            n_con != n_prosoc & test_stat == 'f'                                        ~ esc::esc_f(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,               
-                           n_con != n_prosoc & test_stat == 'chi'                                      ~ esc::esc_rpb(test_list.stat, grp1n = n_prosoc, grp2n = n_con, totaln = n)$es, 
+                           n_con != n_prosoc & test_stat == 'chi'                                      ~ esc::esc_rpb(effectsize::chisq_to_phi(abs(test_list.stat), n = n, adjust = F)$phi, grp1n = n_prosoc, grp2n = n_con)$es,  
                            (n_con == n_prosoc | (is.na(n_con) & is.na(n_prosoc))) & test_stat == 'z'   ~ effectsize::z_to_d(test_list.stat, n = n)$d,
                            (n_con == n_prosoc | (is.na(n_con) & is.na(n_prosoc))) & test_stat == 't'   ~ esc::esc_t(test_list.stat, totaln = n)$es,     
                            (n_con == n_prosoc | (is.na(n_con) & is.na(n_prosoc))) & test_stat == 'f'   ~ esc::esc_f(test_list.stat, totaln = n)$es,                                    
