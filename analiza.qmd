@@ -393,7 +393,7 @@ data = data %>%
                            n_con == n_prosoc & test_stat == 'f'                ~ esc::esc_f(test_list.stat, totaln = n)$es,                                    
                            n_con == n_prosoc & test_stat == 'chi'              ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
                            is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ esc::esc_chisq(test_list.stat, totaln = n * 2)$es,                # ? - takie n? mogę zignorować fakt, że to zależne?
-                           TRUE ~ NA),
+                           TRUE ~ NA),                                                                                                             # tutaj muszę zmienić chyba, bo może to być chi z McNemara 
          SMD_R = ifelse(cite == 'beene2015effect_a' | cite == 'gordon2018powering_a', NA, SMD_R)) %>%  
   relocate(SMD, SMD_calc, .after = 'SMD_R')
 
@@ -408,6 +408,8 @@ cor.test(abs(data$SMD_R), abs(data$SMD))       # korelacja 0.92
 ```
 
 ```{r}
+
+# Nad poniższymi wariancjami muszę zastanowić się kolejny raz
 
 data %>% 
   mutate(SMD_R_var = case_when(test_stat == 'r'                                            ~ 2/n + SMD_R**2/(4 * n),                               # ? - dla r Pearsona tak jak z korelacją punktowo-dwuseryjną?                      
@@ -439,7 +441,7 @@ data = data %>%
          SMD_se     = sqrt(SMD_var),
          W_var      = 1 / SMD_var,
          W_n        = case_when(!is.na(n_con) & !is.na(n_prosoc) ~ n,
-                                is.na(n_con) & is.na(n_prosoc)   ~ n * 2),           # ? - mogę tu też tak zignorować, że to zależne?
+                                is.na(n_con) & is.na(n_prosoc)   ~ n * 2),           # ? - mogę tu też tak zignorować, że to zależne? [nieistotne - i tak tego nie używam]
          SMD_W_var  = SMD_R * W_var,
          SMD_W_n    = SMD_R * W_n,
          SMD2_W_var = SMD_R**2 * W_var,
@@ -449,96 +451,29 @@ data = data %>%
          
 ```
 
-
-
-
-```{r}
-
-
-
-
-
-```
-
-
-
-
 ```{r}
 
 cor.test(abs(data$SMD_var), abs(data$v))               # korelacja 0.58
 
 ```
 
+
 ```{r}
 
 metafor::rma(yi = abs(data$SMD_R), vi = data$SMD_var)  # SMD = 0.40, słaby związek
 
 ```
-
 ```{r}
 
-metafor::rma(yi = abs(data$SMD_R), vi = 1/data$W_n)    # SMD = 0.49, umiarkowany związek (CI - słaby/umiarkowany)
+#rstatix::mcnemar_test(matrix(c(794, 86, 150, 570), nrow = 2))
+#effectsize::cohens_g(matrix(c(794, 86, 150, 570), nrow = 2))
+
+
 
 ```
 
-```{r}
 
-sum(data$SMD_W_var, na.rm = TRUE) / sum(data$W_var, na.rm = TRUE)            # 0.24, słaby związek
-sum(data$SMD_W_n, na.rm = TRUE) / sum(data$W_n[which(!is.na(data$SMD_W_n))]) # 0.27, słaby związek
 
-sqrt(1/sum(data$W_var, na.rm = TRUE))              # SE
-sqrt(1/sum(data$W_n[which(!is.na(data$SMD_W_n))])) # SE
-
-sum(data$SMD_W_var, na.rm = TRUE) / sum(data$W_var, na.rm = TRUE) + sqrt(1/sum(data$W_var, na.rm = TRUE)) * qnorm(0.975)                          # CI_up
-sum(data$SMD_W_n, na.rm = TRUE) / sum(data$W_n[which(!is.na(data$SMD_W_n))]) + sqrt(1/sum(data$W_n[which(!is.na(data$SMD_W_n))])) * qnorm(0.975)  # CI_up
-
-sum(data$SMD_W_var, na.rm = TRUE) / sum(data$W_var, na.rm = TRUE) - sqrt(1/sum(data$W_var, na.rm = TRUE)) * qnorm(0.975)                          # CI_low
-sum(data$SMD_W_n, na.rm = TRUE) / sum(data$W_n[which(!is.na(data$SMD_W_n))]) - sqrt(1/sum(data$W_n[which(!is.na(data$SMD_W_n))])) * qnorm(0.975)  # CI_low
-
-sum(data$SMD_W_var, na.rm = TRUE) / sum(data$W_var, na.rm = TRUE) / sqrt(1/sum(data$W_var, na.rm = TRUE))                         # z
-sum(data$SMD_W_n, na.rm = TRUE) / sum(data$W_n[which(!is.na(data$SMD_W_n))]) / sqrt(1/sum(data$W_n[which(!is.na(data$SMD_W_n))])) # z
-
-sum(data$SMD2_W_var, na.rm = TRUE) - sum(data$SMD_W_var, na.rm = TRUE)**2/sum(data$W_var, na.rm = TRUE)          # Q
-sum(data$SMD2_W_n, na.rm = TRUE) - sum(data$SMD_W_n, na.rm = TRUE)**2/sum(data$W_n[which(!is.na(data$SMD_W_n))]) # Q
-
-(1 - pnorm(sum(data$SMD2_W_var, na.rm = TRUE) - sum(data$SMD_W_var, na.rm = TRUE)**2/sum(data$W_var, na.rm = TRUE), sum(!is.na(data$SMD_W_n)) - 1))          < 0.0001   # p(Q)
-(1 - pnorm(sum(data$SMD2_W_n, na.rm = TRUE) - sum(data$SMD_W_n, na.rm = TRUE)**2/sum(data$W_n[which(!is.na(data$SMD_W_n))]), sum(!is.na(data$SMD_W_n)) - 1)) < 0.0001   # p(Q)
-
-(sum(data$SMD2_W_var, na.rm = TRUE) - sum(data$SMD_W_var, na.rm = TRUE)**2/sum(data$W_var, na.rm = TRUE) - sum(!is.na(data$SMD_W_n)) - 1)/                              # v0
-  (sum(data$W_var, na.rm = TRUE) - sum(data$W2_var, na.rm = TRUE)/sum(data$W_var, na.rm = TRUE))
-(sum(data$SMD2_W_n, na.rm = TRUE) - sum(data$SMD_W_n, na.rm = TRUE)**2/sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE) - sum(!is.na(data$SMD_W_n)) - 1)/       # v0
-  (sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE) - sum(data$W2_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE)/sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE))
-
-1/(data$SMD_var + (sum(data$SMD2_W_var, na.rm = TRUE) - sum(data$SMD_W_var, na.rm = TRUE)**2/sum(data$W_var, na.rm = TRUE) - sum(!is.na(data$SMD_W_n)) - 1)/                         # W_new
-  (sum(data$W_var, na.rm = TRUE) - sum(data$W2_var, na.rm = TRUE)/sum(data$W_var, na.rm = TRUE)))
-1/(data$SMD_var + (sum(data$SMD2_W_n, na.rm = TRUE) - sum(data$SMD_W_n, na.rm = TRUE)**2/sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE) - sum(!is.na(data$SMD_W_n)) - 1)/  # W_new
-  (sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE) - sum(data$W2_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE)/sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE)))
-
-data = data %>% 
-  mutate(W_var_new  = 1/(SMD_var + (sum(data$SMD2_W_var, na.rm = TRUE) - sum(data$SMD_W_var, na.rm = TRUE)**2/sum(data$W_var, na.rm = TRUE) - sum(!is.na(data$SMD_W_n)) - 1)/                         
-  (sum(data$W_var, na.rm = TRUE) - sum(data$W2_var, na.rm = TRUE)/sum(data$W_var, na.rm = TRUE))),
-         W_n_new    = 1/(SMD_var + (sum(data$SMD2_W_n, na.rm = TRUE) - sum(data$SMD_W_n, na.rm = TRUE)**2/sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE) - sum(!is.na(data$SMD_W_n)) - 1)/  
-  (sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE) - sum(data$W2_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE)/sum(data$W_n[which(!is.na(data$SMD_W_n))], na.rm = TRUE))),
-         SMD_W_var_new  = SMD_R * W_var_new,
-         SMD_W_n_new    = SMD_R * W_n_new,
-         SMD2_W_var_new = SMD_R**2 * W_var_new,
-         SMD2_W_n_new   = SMD_R**2 * W_n_new,
-         W2_var_new     = W_var_new**2,
-         W2_n_new       = W_n_new**2) 
-
-```
-
-```{r}
-
-metafor::rma(yi = abs(data$SMD_R), vi = 1/data$W_var_new)  # SMD = 0.40, słaby związek
-
-```
-
-```{r}
-
-metafor::rma(yi = abs(data$SMD_R), vi = 1/data$W_n_new)    # SMD = 0.43, słaby związek (CI - słaby/umiarkowany)
-
-```
 
 
 
