@@ -392,8 +392,8 @@ data = data %>%
                            n_con == n_prosoc & test_stat == 't'                ~ esc::esc_t(test_list.stat, totaln = n)$es,     
                            n_con == n_prosoc & test_stat == 'f'                ~ esc::esc_f(test_list.stat, totaln = n)$es,                                    
                            n_con == n_prosoc & test_stat == 'chi'              ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
-                           is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ esc::esc_chisq(test_list.stat, totaln = n * 2)$es,                # ? - takie n? mogę zignorować fakt, że to zależne?
-                           TRUE ~ NA),                                                                                                             # tutaj muszę zmienić chyba, bo może to być chi z McNemara 
+                           is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ log(max(c((38 + 14)/(23 + 10)), (23 + 10)/(38 + 14))) * sqrt(3) / pi, # z OR = max(b/c, c/b) z tabeli krzyżowej
+                           TRUE ~ NA),                                                                                                            
          SMD_R = ifelse(cite == 'beene2015effect_a' | cite == 'gordon2018powering_a', NA, SMD_R)) %>%  
   relocate(SMD, SMD_calc, .after = 'SMD_R')
 
@@ -402,14 +402,14 @@ data = data %>%
 
 ```{r}
 
-cor.test(abs(data$SMD_R), abs(data$SMD))       # korelacja 0.92
+cor.test(abs(data$SMD_R), abs(data$SMD))       # korelacja 0.93
 #cor.test(abs(data$SMD_R), abs(data$SMD_calc))
 
 ```
 
 ```{r}
 
-# Nad poniższymi wariancjami muszę zastanowić się kolejny raz
+# Nad poniższymi wariancjami (ze znakami zapytania) muszę zastanowić się kolejny raz
 
 data %>% 
   mutate(SMD_R_var = case_when(test_stat == 'r'                                            ~ 2/n + SMD_R**2/(4 * n),                               # ? - dla r Pearsona tak jak z korelacją punktowo-dwuseryjną?                      
@@ -422,7 +422,7 @@ data %>%
                                n_con == n_prosoc & test_stat == 't'                        ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,     
                                n_con == n_prosoc & test_stat == 'f'                        ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,                                   
                                n_con == n_prosoc & test_stat == 'chi'                      ~ SMD_R**2/abs(test_list.stat),
-                               is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi'         ~ SMD_R**2/abs(test_list.stat),                         # ? - czy jak dane zależne, mogę zrobić tak normalnie, jak wyżej?
+                               is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi'         ~ (1/(38 + 14) + 1/(23 + 10)) * 3 / pi**2,
                                TRUE ~ NA))
 
 data %>% 
@@ -434,9 +434,10 @@ data %>%
   relocate(v, .after = 'SMD_R_var')
 
 data = data %>% 
-  mutate(SMD_var  = case_when((n_con == n_prosoc | (is.na(n_con) & is.na(n_prosoc))) & test_stat == 'chi' ~ SMD_R**2/abs(test_list.stat),
-                              !is.na(n_con) & !is.na(n_prosoc)                                            ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,
-                              is.na(n_con) & is.na(n_prosoc)                                              ~ 2/n + SMD_R**2/(4 * n),
+  mutate(SMD_var  = case_when(is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ (1/(38 + 14) + 1/(23 + 10)) * 3 / pi**2,
+                              n_con == n_prosoc & test_stat == 'chi'              ~ SMD_R**2/abs(test_list.stat),
+                              is.na(n_con) & is.na(n_prosoc)                      ~ 2/n + SMD_R**2/(4 * n),
+                              !is.na(n_con) & !is.na(n_prosoc)                    ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,
                               TRUE ~ NA),
          SMD_se     = sqrt(SMD_var),
          W_var      = 1 / SMD_var,
@@ -448,7 +449,7 @@ data = data %>%
          SMD2_W_n   = SMD_R**2 * W_n,
          W2_var     = W_var**2,
          W2_n       = W_n**2) 
-         
+
 ```
 
 ```{r}
@@ -460,20 +461,8 @@ cor.test(abs(data$SMD_var), abs(data$v))               # korelacja 0.58
 
 ```{r}
 
-metafor::rma(yi = abs(data$SMD_R), vi = data$SMD_var)  # SMD = 0.40, słaby związek
+metafor::rma(yi = abs(data$SMD_R), vi = data$SMD_var)  # SMD = 0.39, słaby związek
 
 ```
-```{r}
-
-#rstatix::mcnemar_test(matrix(c(794, 86, 150, 570), nrow = 2))
-#effectsize::cohens_g(matrix(c(794, 86, 150, 570), nrow = 2))
-
-
-
-```
-
-
-
-
 
 
