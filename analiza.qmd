@@ -384,7 +384,7 @@ data = data %>%
                                !is.na(test_list.stat) ~ names(test_list.stat)),
          SMD_R = case_when(test_stat == 'r'                                    ~ esc::esc_rpb(effect_size, totaln = n)$es,                                     
                            if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x))    ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n_prosoc, n_con)$d, 
-                           if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n/2, n/2)$d, 
+                           if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n, n)$d, 
                            n_con != n_prosoc & test_stat == 't'                ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,  
                            n_con != n_prosoc & test_stat == 'f'                ~ esc::esc_f(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,               
                            n_con != n_prosoc & test_stat == 'chi'              ~ esc::esc_rpb(effectsize::chisq_to_phi(abs(test_list.stat), n = n, adjust = F)$phi, grp1n = n_prosoc, grp2n = n_con)$es,  
@@ -392,7 +392,7 @@ data = data %>%
                            n_con == n_prosoc & test_stat == 't'                ~ esc::esc_t(test_list.stat, totaln = n)$es,     
                            n_con == n_prosoc & test_stat == 'f'                ~ esc::esc_f(test_list.stat, totaln = n)$es,                                    
                            n_con == n_prosoc & test_stat == 'chi'              ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
-                           is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ log(max(c((38 + 14)/(23 + 10)), (23 + 10)/(38 + 14))) * sqrt(3) / pi, # z OR = max(b/c, c/b) z tabeli krzyżowej
+                           is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ effectsize::oddsratio_to_d(max(c((38 + 14)/(23 + 10)), (23 + 10)/(38 + 14))), # z OR = max(b/c, c/b) z tabeli krzyżowej
                            TRUE ~ NA),                                                                                                            
          SMD_R = ifelse(cite == 'beene2015effect_a' | cite == 'gordon2018powering_a', NA, SMD_R)) %>%  
   relocate(SMD, SMD_calc, .after = 'SMD_R')
@@ -409,12 +409,10 @@ cor.test(abs(data$SMD_R), abs(data$SMD))       # korelacja 0.93
 
 ```{r}
 
-# Nad poniższymi wariancjami (ze znakami zapytania) muszę zastanowić się kolejny raz
-
 data %>% 
-  mutate(SMD_R_var = case_when(test_stat == 'r'                                            ~ 2/n + SMD_R**2/(4 * n),                               # ? - dla r Pearsona tak jak z korelacją punktowo-dwuseryjną?                      
+  mutate(SMD_R_var = case_when(test_stat == 'r'                                            ~ 4/((1 - effect_size**2) * (n - 1)),                                         
                                if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x))            ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,
-                               if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ 2/n + SMD_R**2/(4 * n),                               # ? - takie n przy danych zależnych? (n=n1=n2)  
+                               if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ 2/n + SMD_R**2/(4 * n),                               
                                n_con != n_prosoc & test_stat == 't'                        ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,
                                n_con != n_prosoc & test_stat == 'f'                        ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,            
                                n_con != n_prosoc & test_stat == 'chi'                      ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n, # ? - kor. potraktowana punkt.-dwuser., więc typowy wzór chyba adekwatniejszy niż z chi
@@ -422,27 +420,20 @@ data %>%
                                n_con == n_prosoc & test_stat == 't'                        ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,     
                                n_con == n_prosoc & test_stat == 'f'                        ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,                                   
                                n_con == n_prosoc & test_stat == 'chi'                      ~ SMD_R**2/abs(test_list.stat),
-                               is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi'         ~ (1/(38 + 14) + 1/(23 + 10)) * 3 / pi**2,
+                               is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi'         ~ (1/(38 + 14) + 1/(23 + 10)) * 3/pi**2,
                                TRUE ~ NA))
 
-data %>% 
-  mutate(SMD_R_var = case_when(if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x)) | (n_con != n_prosoc & test_stat == 'chi')  ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,
-                               if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) | test_stat == 'r'               ~ 2/n + SMD_R**2/(4 * n),      
-                               test_stat %in% c('z', 't', 'f')                                                              ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,
-                               (n_con == n_prosoc | (is.na(n_con) & is.na(n_prosoc))) & test_stat == 'chi'                  ~ SMD_R**2/abs(test_list.stat),
-                               TRUE ~ NA)) %>%
-  relocate(v, .after = 'SMD_R_var')
-
 data = data %>% 
-  mutate(SMD_var  = case_when(is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ (1/(38 + 14) + 1/(23 + 10)) * 3 / pi**2,
+  mutate(SMD_var  = case_when(test_stat == 'r'                                    ~ 4/((1 - effect_size) * (n - 1)),
                               n_con == n_prosoc & test_stat == 'chi'              ~ SMD_R**2/abs(test_list.stat),
-                              is.na(n_con) & is.na(n_prosoc)                      ~ 2/n + SMD_R**2/(4 * n),
+                              is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ (1/(38 + 14) + 1/(23 + 10)) * 3 / pi**2,
                               !is.na(n_con) & !is.na(n_prosoc)                    ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,
+                              !is.na(SMD_R)                                       ~ 2/n + SMD_R**2/(4 * n),
                               TRUE ~ NA),
          SMD_se     = sqrt(SMD_var),
          W_var      = 1 / SMD_var,
          W_n        = case_when(!is.na(n_con) & !is.na(n_prosoc) ~ n,
-                                is.na(n_con) & is.na(n_prosoc)   ~ n * 2),           # ? - mogę tu też tak zignorować, że to zależne? [nieistotne - i tak tego nie używam]
+                                is.na(n_con) & is.na(n_prosoc)   ~ n * 2),           # ? - mogę tu tak zignorować, że to zależne? [nieistotne - i tak tego nie używam]
          SMD_W_var  = SMD_R * W_var,
          SMD_W_n    = SMD_R * W_n,
          SMD2_W_var = SMD_R**2 * W_var,
@@ -454,7 +445,7 @@ data = data %>%
 
 ```{r}
 
-cor.test(abs(data$SMD_var), abs(data$v))               # korelacja 0.58
+cor.test(abs(data$SMD_var), abs(data$v))               # korelacja 0.57
 
 ```
 
@@ -464,5 +455,4 @@ cor.test(abs(data$SMD_var), abs(data$v))               # korelacja 0.58
 metafor::rma(yi = abs(data$SMD_R), vi = data$SMD_var)  # SMD = 0.39, słaby związek
 
 ```
-
 
