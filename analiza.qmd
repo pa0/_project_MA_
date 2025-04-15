@@ -1,15 +1,71 @@
 ---
 title: "Meta-analysis"
-format: html
+abstract: |
+  **Objective**. tap tap
+  **Methods**. tap tap
+  **Results**. tap tap
+  **Conclusions**. tap
+keywords: 
+  - cooperative games
+  - prosocial behaviours
+author:
+  - name: Agnieszka Szostak
+  - name: Paweł Kleka
+    email: pawel.kleka@amu.edu.pl
+    affiliation: 
+      - id: uam
+        name: Adam Mickiewicz University in Poznan
+        department: Wydział Psychologii i Kognitywistyki 
+        postal-code: 60-712
+        address: ul. Wieniawskiego 1
+        city: Poznań
+      - id: uz
+        name: Uniwersytet Zielonogórski
+        department: Wydział Nauk Społecznych, Instytut Psychologii
+        postal-code: 55-040
+        address: ul. Licealna 2
+        city: Zielona Góra
+    note: ORCID 0000-0003-0841-0015
+    attributes:
+        corresponding: true
+  - name: Agnieszka Smolnicka
+    email: agnieszka.smolnicka@amu.edu.pl
+    affiliation: 
+      - ref: uam
+date: last-modified
+
+format: 
+  # html: default
+  # docx najlepiej z latexa przez pandoc -i input.tex -o output.docx --citeproc
+  elsevier-pdf:
+    keep-tex: true
+    journal:
+      name: Czasopismo
+      formatting: preprint       # review | doubleblind | preprint
+      model: 3p                  # Don't set a model with preprint 1p | 3p | 5p
+      layout: onecolumn          # onecolumn | twocolumn
+      cite-style: authoryear     # number | numbername | super
+      cite-method: citeproc
+      colorlinks: true
+      linkcolor: darkblue
+      citecolor: darkblue
+      urlcolor: darkblue
+    include-in-header: 
+      text: |
+        \newpageafter{author}
+        \usepackage{xcolor}
+        \definecolor{darkblue}{RGB}{0,0,139}
+
+bibliography: [references/bibliografia.2.0.bib, references/-pakiety.bib]
 ---
 
 
 ```{r}
-load('data.rds')
+load('dane/data.rds')
 ```
 
 ```{r}
-# właściwa analiza do włączenia do artykułu
+# tu właściwa analiza do włączenia do artykułu
 # sprzątanie danych przeniosłem do pliku 'tidy.data.qmd'
 ```
 
@@ -472,6 +528,7 @@ metafor::regtest(met)
 metafor::ranktest(met) 
 
 ```
+
 ```{r}
 
 print(influence(met))
