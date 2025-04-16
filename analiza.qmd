@@ -67,7 +67,7 @@ View(data)
 dplyr::glimpse(data)
 skimr::skim(data)
 summarytools::dfSummary(data) %>%
-  summarytools::view(., footnote = '', custom.css = 'tiny_text.css', table.classes = 'tiny-text')
+  summarytools::view(., footnote = '', custom.css = '_extensions/tiny_text.css', table.classes = 'tiny-text')
 kableExtra::kable_styling(knitr::kable(data), font_size = 8)
 
 ```
@@ -81,8 +81,7 @@ data %>%
 
 data = data %>%
   mutate(id = 1:nrow(.),
-         bibitem = if_else(!(str_sub(bibitem, 1, 2) %in% c('A.', 'B.')), bibitem, str_sub(bibitem, 4, -1L)),
-         .before = 1) %>%
+         bibitem = if_else(!(str_sub(bibitem, 1, 2) %in% c('A.', 'B.')), bibitem, str_sub(bibitem, 4, -1L)), .before = 1) %>%
   fill(bibitem, .direction = 'down') %>%
   mutate(bibitem = if_else(is.na(str_locate(str_sub(bibitem, str_locate(bibitem, '[)]')[,1] + 3, -1L), '\\.|\\(')[,1]),
                            str_c(bibitem, '.'),
@@ -372,8 +371,7 @@ data = data %>%
   
 # dla przypadków 0,1,2 (w tym 3,4) 
 data = data %>%
-  mutate(test_stat = case_when(effect_coef == 'r' ~ 'r',
-                               !is.na(test_list.stat) ~ names(test_list.stat)),
+  mutate(test_stat = case_when(effect_coef == 'r' ~ 'r', !is.na(test_list.stat) ~ names(test_list.stat)),
          SMD_R = case_when(test_stat == 'r'                                    ~ esc::esc_rpb(effect_size, totaln = n)$es,                                     
                            if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x))    ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n_prosoc, n_con)$d, 
                            if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n, n)$d, 
