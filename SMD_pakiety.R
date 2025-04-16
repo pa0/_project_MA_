@@ -388,8 +388,11 @@ metafor::conv.2x2(ri = sqrt(chi/13), ni = 13, n1i = 7, n2i = 5, correct = F)
 metafor::conv.2x2(ri = sqrt(chi/13), ni = 13, n1i = 7, n2i = 5, correct = T)    # jeśli poda się phi, a nie chi, to nie uwzględnia korekty
 
 
+# jeśli jest beta, to SE = beta / t
+# a SMD = 1/2 LN((beta + 1) / (beta - 1))
 
-
-
+p = 0.81
+beta = .004
+beta / qt(1 - p/2, df = 192) # SE
 
 

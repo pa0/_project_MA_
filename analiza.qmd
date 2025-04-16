@@ -22,14 +22,7 @@ data %>% head
 data = data %>%
   janitor::remove_constant(na.rm = TRUE)      
 
-
 # zmiana nazw kolumn 
-
-data %>% colnames
-
-data = data %>%
-  janitor::clean_names()
-
 names(data) = c('bibitem', 
                 'first_author',
                 'part',
@@ -57,10 +50,11 @@ names(data) = c('bibitem',
                 'm_prosoc',
                 'sd_prosoc',
                 'measured_construct')
-
+  
 ```
 
 ```{r}
+#| eval: false
 # podgląd danych
 
 View(data)
@@ -75,9 +69,6 @@ kableExtra::kable_styling(knitr::kable(data), font_size = 8)
 
 ```{r}
 # transformacja danych # dane o artykułach (czyszczenie + dodanie ważnych kolumn)
-
-data %>%
-  distinct(bibitem)
 
 data = data %>%
   mutate(id = 1:nrow(.),
@@ -139,7 +130,8 @@ data = data %>%
 
 
 ```{r}
-# transformacja danych # zmiana typów zmiennych ilościowych
+# transformacja danych 
+# zmiana typów zmiennych ilościowych
 
 data = data %>%
   mutate_at(vars(c(year,
@@ -316,8 +308,7 @@ Wielkości efektów
 ==================
 
 ```{r}
-
-data2 = data %>%
+data = data %>%
   relocate(c(n, n_prosoc, n_con), .after = test_list)
 
 # 0 - n = n1 + n2, n1 = n2
@@ -345,7 +336,7 @@ data = data %>%
   
 # ogólne poprawy
 data = data %>%
-  mutate(n = case_when(cite == 'wu2019promoting'              ~ 131,
+  mutate(n = case_when(#cite == 'wu2019promoting'              ~ 131,     # PK dlaczego? grały tylko osoby z 2 grup 28+34
                        cite == 'lobel2016relation_a'          ~ 184,
                        cite == 'parsons2019prosocial_a'       ~ 71,
                        cite == 'parsons2018validation_a'      ~ 76,
@@ -368,23 +359,52 @@ data = data %>%
                                               cite == 'eriksson2021behavioral_a'                          ~ -2.94,
                                               TRUE                                                        ~ test_list.stat),
                                     names = ifelse(cite %in% c('wu2019promoting_a', 'shoshani2021video_a', 'lobel2016relation_a', 'eriksson2021behavioral_a'), 't', names(test_list.stat))))
-  
+```
+
+
+```{r}
 # dla przypadków 0,1,2 (w tym 3,4) 
 data = data %>%
-  mutate(test_stat = case_when(effect_coef == 'r' ~ 'r', !is.na(test_list.stat) ~ names(test_list.stat)),
-         SMD_R = case_when(test_stat == 'r'                                    ~ esc::esc_rpb(effect_size, totaln = n)$es,                                     
-                           if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x))    ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n_prosoc, n_con)$d, 
-                           if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n, n)$d, 
-                           n_con != n_prosoc & test_stat == 't'                ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,  
-                           n_con != n_prosoc & test_stat == 'f'                ~ esc::esc_f(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,               
-                           n_con != n_prosoc & test_stat == 'chi'              ~ esc::esc_rpb(effectsize::chisq_to_phi(abs(test_list.stat), n = n, adjust = F)$phi, grp1n = n_prosoc, grp2n = n_con)$es,  
-                           n_con == n_prosoc & test_stat == 'z'                ~ effectsize::z_to_d(test_list.stat, n = n)$d,
-                           n_con == n_prosoc & test_stat == 't'                ~ esc::esc_t(test_list.stat, totaln = n)$es,     
-                           n_con == n_prosoc & test_stat == 'f'                ~ esc::esc_f(test_list.stat, totaln = n)$es,                                    
-                           n_con == n_prosoc & test_stat == 'chi'              ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
-                           is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ effectsize::oddsratio_to_d(max(c((38 + 14)/(23 + 10)), (23 + 10)/(38 + 14))), # z OR = max(b/c, c/b) z tabeli krzyżowej
-                           TRUE ~ NA),                                                                                                            
-         SMD_R = ifelse(cite == 'beene2015effect_a' | cite == 'gordon2018powering_a', NA, SMD_R)) %>%  
+  rowwise() %>%
+  mutate(
+    test_stat = case_when(
+      effect_coef == 'r' ~ 'r',
+      !is.na(test_list.stat) ~ names(test_list.stat)
+    ),
+    SMD_R = case_when(
+      test_stat == 'r'                                    ~ esc::esc_rpb(effect_size, totaln = n)$es,
+      if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x))    ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n_prosoc, n_con)$d,
+      if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n, n)$d,
+      n_con != n_prosoc &
+        test_stat == 't'                ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,
+      n_con != n_prosoc &
+        test_stat == 'f'                ~ esc::esc_f(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,
+      n_con != n_prosoc &
+        test_stat == 'chi'              ~ esc::esc_rpb(
+          effectsize::chisq_to_phi(abs(test_list.stat), n = n, adjust = F)$phi,
+          grp1n = n_prosoc,
+          grp2n = n_con
+        )$es,
+      n_con == n_prosoc &
+        test_stat == 'z'                ~ effectsize::z_to_d(test_list.stat, n = n)$d,
+      n_con == n_prosoc &
+        test_stat == 't'                ~ esc::esc_t(test_list.stat, totaln = n)$es,
+      n_con == n_prosoc &
+        test_stat == 'f'                ~ esc::esc_f(test_list.stat, totaln = n)$es,
+      n_con == n_prosoc &
+        test_stat == 'chi'              ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
+      is.na(n_con) &
+        is.na(n_prosoc) &
+        test_stat == 'chi' ~ effectsize::oddsratio_to_d(max(c((38 + 14) / (23 + 10)), (23 + 10) / (38 + 14))), # z OR = max(b/c, c/b) z tabeli krzyżowej
+      TRUE ~ NA_real_
+    ),
+    SMD_R = ifelse(
+      cite == 'beene2015effect_a' |
+        cite == 'gordon2018powering_a',
+      NA,
+      SMD_R
+    )
+  ) %>%
   relocate(SMD, SMD_calc, .after = 'SMD_R')
 
 ```
@@ -400,6 +420,7 @@ cor.test(abs(data$SMD_R), abs(data$SMD))       # korelacja 0.93
 ```{r}
 
 data %>% 
+  rowwise() %>%
   mutate(SMD_R_var = case_when(test_stat == 'r'                                            ~ 4/((1 - effect_size**2) * (n - 1)),                                         
                                if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x))            ~ (n_con + n_prosoc)/(n_con * n_prosoc) + SMD_R**2/2/n,
                                if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ 2/n + SMD_R**2/(4 * n),                               
@@ -450,21 +471,42 @@ as.matrix(predict(met))
 
 ```
 ```{r}
-
 metafor::radial(met)
-metafor::baujat(met)
-metafor::forest(met)
-metafor::funnel(met)
-metafor::regtest(met) 
-metafor::ranktest(met) 
+```
 
+
+```{r}
+metafor::baujat(met)
+```
+
+
+```{r}
+metafor::forest(met)
+```
+
+
+```{r}
+metafor::funnel(met)
+```
+
+
+```{r}
+metafor::regtest(met)
+```
+
+
+```{r}
+metafor::ranktest(met) 
 ```
 
 ```{r}
+print(influence(met)) |> 
+  arrange(-dfbs)
+```
 
-print(influence(met))
+
+```{r}
 plot(influence(met))
-
 ```
 
 
