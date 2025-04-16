@@ -1,29 +1,18 @@
 ---
 title: "Meta-analysis"
-format: html
 ---
 
 
 ```{r}
-load('data.rds')
-```
-
-```{r}
-# właściwa analiza do włączenia do artykułu
-# sprzątanie danych przeniosłem do pliku 'tidy.data.qmd'
-```
-
-```{r}
+# tu właściwa analiza do włączenia do artykułu
 library(tidyverse)
 ```
 
 
 ```{r}
 # wczytanie danych
-
-data = readxl::read_xlsx('Meta 2.1.xlsx', sheet = 3)
+data = readxl::read_xlsx('dane/Meta 2.1.xlsx', sheet = 3)
 data %>% head
-
 ```
 
 
@@ -472,6 +461,7 @@ metafor::regtest(met)
 metafor::ranktest(met) 
 
 ```
+
 ```{r}
 
 print(influence(met))

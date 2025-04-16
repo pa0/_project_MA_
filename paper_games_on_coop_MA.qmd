@@ -1,78 +1,73 @@
 ---
-title             : "Influence of games on cooperative behaviours. Metaanalysis."
-shorttitle        : "GAMES ON COOP"
-
-author: 
-  - name          : "Agnieszka Szostak"
-    affiliation   : "1"
-    corresponding : no    # Define only one corresponding author
-    address       : "Postal address"
-    email         : "my@email.com"
-    role:         # Contributorship roles (e.g., CRediT, https://casrai.org/credit/)
-      - "Conceptualization"
-      - "Writing - Original Draft Preparation"
-      - "Writing - Review & Editing"
-  - name          : "Paweł Kleka"
-    affiliation   : "1"
-    role:
-      - "Analysis"
-      - "Writing - Review & Editing"
-      - "Supervision"
-
-affiliation:
-  - id            : "1"
-    institution   : "Adam Mickiewicz University in Poznan"
-
-authornote: |
-  Add complete departmental affiliations for each author here. Each new line herein must be indented, like this line.
-
-  Enter author note here.
-
+title: "Influence of games on cooperative behaviours. Metaanalysis."
 abstract: |
-  One or two sentences providing a **basic introduction** to the field,  comprehensible to a scientist in any discipline.
-  
-  Two to three sentences of **more detailed background**, comprehensible  to scientists in related disciplines.
-  
-  One sentence clearly stating the **general problem** being addressed by  this particular study.
-  
-  One sentence summarizing the main result (with the words "**here we show**" or their equivalent).
-  
-  Two or three sentences explaining what the **main result** reveals in direct comparison to what was thought to be the case previously, or how the  main result adds to previous knowledge.
-  
-  One or two sentences to put the results into a more **general context**.
-  
-  Two or three sentences to provide a **broader perspective**, readily comprehensible to a scientist in any discipline.
-  
-  <!-- https://tinyurl.com/ybremelq -->
-  
-keywords          : "keywords"
-wordcount         : "X"
+  **Objective**. tap tap
+  **Methods**. tap tap
+  **Results**. tap tap
+  **Conclusions**. tap
+keywords: 
+  - cooperative games
+  - prosocial behaviours
+author:
+  - name: Paweł Kleka
+    email: pawel.kleka@amu.edu.pl
+    affiliation: 
+      - id: uam
+        name: Adam Mickiewicz University in Poznan
+        department: Wydział Psychologii i Kognitywistyki 
+        postal-code: 60-712
+        address: ul. Wieniawskiego 1
+        city: Poznań
+      - id: uz
+        name: Uniwersytet Zielonogórski
+        department: Wydział Nauk Społecznych, Instytut Psychologii
+        postal-code: 55-040
+        address: ul. Licealna 2
+        city: Zielona Góra
+    note: ORCID 0000-0003-0841-0015
+    attributes:
+        corresponding: true
+  - name: Agnieszka Smolnicka
+    email: agnieszka.smolnicka@amu.edu.pl
+    affiliation: 
+      - ref: uam
+  - name: Agnieszka Szostak
+date: last-modified
 
-bibliography      : "bibliografia.2.0.bib"
+format: 
+  # html: default
+  # docx najlepiej z latexa przez pandoc -i input.tex -o output.docx --citeproc
+  elsevier-pdf:
+    keep-tex: true
+    journal:
+      name: Czasopismo
+      formatting: preprint       # review | doubleblind | preprint
+      model: 3p                  # Don't set a model with preprint 1p | 3p | 5p
+      layout: onecolumn          # onecolumn | twocolumn
+      cite-style: authoryear     # number | numbername | super
+      cite-method: citeproc
+      colorlinks: true
+      linkcolor: darkblue
+      citecolor: darkblue
+      urlcolor: darkblue
+    include-in-header: 
+      text: |
+        \newpageafter{author}
+        \usepackage{xcolor}
+        \definecolor{darkblue}{RGB}{0,0,139}
 
-floatsintext      : no
-linenumbers       : yes
-draft             : yes
-mask              : no
-
-figurelist        : no
-tablelist         : no
-footnotelist      : no
-
-classoption       : "man"
-output            : papaja::apa6_pdf
+bibliography: [references/bibliografia.2.0.bib, references/-pakiety.bib]
 ---
 
 ```{r setup, include = FALSE}
-library("papaja")
-r_refs("r-references.bib")
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
+
+library(tidyverse)
+load('dane/data.rds')
+
 ```
 
-```{r analysis-preferences}
-# Seed for random number generation
-set.seed(42)
-knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
-```
+
 
 The video games industry has grown significantly over the last few decades.
 According to the 2021 Newzoo report, the game market is now worth \$175.8 billion, and there are over 3 billion gamers worldwide.
