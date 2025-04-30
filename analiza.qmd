@@ -389,7 +389,7 @@ data = data %>%
                            n_con == n_prosoc & test_stat == 'chi'              ~ esc::esc_chisq(test_list.stat, totaln = n)$es,
                            is.na(n_con) & is.na(n_prosoc) & test_stat == 't'   ~ esc::esc_t(test_list.stat, totaln = n)$es,
                            is.na(n_con) & is.na(n_prosoc) & test_stat == 'chi' ~ effectsize::oddsratio_to_d(max(c((38 + 14)/(23 + 10)), (23 + 10)/(38 + 14)))), # z OR = max(b/c, c/b) z tabeli krzyżowej           
-         SMD_R = ifelse(cite == 'beene2015effect_a' | cite == 'gordon2018powering_a', NA, SMD_R)) %>%  
+         SMD_R = ifelse(cite %in% c('beene2015effect_a', 'gordon2018powering_a', 'coyne2016super_a', 'coyne2016super_b'), NA, SMD_R)) %>%  
   relocate(SMD, SMD_calc, .after = 'SMD_R')
 
 ```
