@@ -377,7 +377,7 @@ data = data %>%
   mutate(test_stat = case_when(effect_coef %in% c('r', 'beta', 'b') ~ effect_coef,
                                !is.na(test_list.stat) ~ names(test_list.stat)),
          SMD_R = case_when(test_stat == 'r' | test_stat == 'beta'              ~ esc::esc_rpb(effect_size, totaln = n)$es,     
-                           test_stat == 'b'                                    ~ esc::esc_B(effect_size, sdy = sd_Y, grp1n = n_con, grp2n = n_prosoc)$es, 
+                           test_stat == 'b'                                    ~ esc::esc_B(effect_size, sdy = sd_Y, grp1n = n_prosoc, grp2n = n_con)$es, 
                            if_all(matches('(_con|_prosoc)$'), ~ !is.na(.x))    ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n_prosoc, n_con)$d, 
                            if_all(matches('^(m|sd)(.*)(_prosoc|_con)$'), ~ !is.na(.x)) ~ metaConvert::es_from_means_sd(m_prosoc, sd_prosoc, m_con, sd_con, n, n)$d, 
                            n_con != n_prosoc & test_stat == 't'                ~ esc::esc_t(test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,  
