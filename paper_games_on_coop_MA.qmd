@@ -162,6 +162,17 @@ The study had to measure at least one social outcome variable, such as prosocial
 
 ## Data analysis
 
+Aby zróżnicować heterogeniczność wewnątrz i między artykułami, należy zastosować wielopoziomową (hierarchiczną) metaanalizę, w której efekty zagnieżdżone są w ramach artykułów. Takie podejście umożliwia oszacowanie dwóch komponentów wariancji:
+	1.	\tau^2_{within} – wariancja efektów wewnątrz artykułów (np. różne pomiary, grupy, czas pomiaru),
+	2.	\tau^2_{between} – wariancja między artykułami (różnice między badaniami jako całościami).
+
+Dzięki temu można obliczyć dwa odpowiadające im współczynniki I² (według np. Viechtaubera, 2021):
+	•	I^2_{within} = \frac{\tau^2_{within}}{\tau^2_{within} + \tau^2_{between} + \sigma^2}
+	•	I^2_{between} = \frac{\tau^2_{between}}{\tau^2_{within} + \tau^2_{between} + \sigma^2}
+
+Gdzie \sigma^2 to uśredniony błąd pomiaru (sampling variance).
+
+
 # Results
 
 # Discussion

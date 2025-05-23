@@ -7,15 +7,33 @@ title: "Meta-analysis"
 library(tidyverse)
 library(knitr)
 library(metafor)
+library()
 library(conflicted)
 conflict_prefer(dplyr::select, quiet = T)
+conflict_prefer(dplyr::filter, quiet = T)
+
 
 load("data/data.Rda")
+#glimpse(data)
+```
+
+```{r}
+
 ```
 
 
 ```{r}
 # ============================ Agregowane wartości ============================= #
+data |> 
+  mutate(
+    waga = 1 / as.numeric(SE)^2,
+    iloczyn = as.numeric(SMD) * waga) |> 
+  group_by(lab) |>
+    summarise(
+      aSMD = sum(iloczyn)/ sum(waga),
+      aSE = sqrt(1 / sum(waga))
+      ) |> 
+  select(lab, aSMD, aSE)
 
 # Parametr korelacji między efektami w obrębie artykułu
 rho <- 0.6  # założona korelacja (możesz przetestować kilka wartości)
