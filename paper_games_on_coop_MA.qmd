@@ -1,16 +1,20 @@
 ---
 title: "Influence of games on cooperative behaviours. Metaanalysis."
-abstract: |
-  **Objective**. tap tap
-  **Methods**. tap tap
-  **Results**. tap tap
-  **Conclusions**. tap
-keywords: 
-  - cooperative games
-  - prosocial behaviours
+shorttitle: "Games on cooperative behaviours"
 author:
   - name: Paweł Kleka
+    corresponding: true
+    orcid: 0000-0003-0841-0015
     email: pawel.kleka@amu.edu.pl
+    url: https://kleka.web.amu.edu.pl
+    # Roles are optional. 
+    # Select from the CRediT: Contributor Roles Taxonomy https://credit.niso.org/
+    # conceptualization, data curation, formal Analysis, funding acquisition, investigation, 
+    # methodology, project administration, resources, software, supervision, validation, 
+    # visualization, writing, editing
+    roles:
+      - conceptualization
+      - writing
     affiliation: 
       - id: uam
         name: Adam Mickiewicz University in Poznan
@@ -24,49 +28,79 @@ author:
         postal-code: 55-040
         address: ul. Licealna 2
         city: Zielona Góra
-    note: ORCID 0000-0003-0841-0015
-    attributes:
-        corresponding: true
   - name: Agnieszka Smolnicka
     email: agnieszka.smolnicka@amu.edu.pl
+    roles: 
+      - data curation
+      - editing
     affiliation: 
       - ref: uam
   - name: Agnieszka Szostak
+    roles: 
+      - conceptualization
+    affiliation: Poznań
+draft-date: true
 date: last-modified
-
-format: 
-  # html: default
-  # docx najlepiej z latexa przez pandoc -i input.tex -o output.docx --citeproc
-  elsevier-pdf:
-    keep-tex: true
-    journal:
-      name: Czasopismo
-      formatting: preprint       # review | doubleblind | preprint
-      model: 3p                  # Don't set a model with preprint 1p | 3p | 5p
-      layout: onecolumn          # onecolumn | twocolumn
-      cite-style: authoryear     # number | numbername | super
-      cite-method: citeproc
-      colorlinks: true
-      linkcolor: darkblue
-      citecolor: darkblue
-      urlcolor: darkblue
-    include-in-header: 
-      text: |
-        \newpageafter{author}
-        \usepackage{xcolor}
-        \definecolor{darkblue}{RGB}{0,0,139}
-
-bibliography: [references/bibliografia.2.0.bib, references/-pakiety.bib]
+blank-lines-above-author-note: 2
+author-note:
+  status-changes: 
+    affiliation-change: ~
+    deceased: ~
+  disclosures:
+    study-registration: ~
+    data-sharing: ~
+    related-report: ~
+    conflict-of-interest: ~
+    financial-support: ~
+    gratitude: ~
+    authorship-agreements: ~
+abstract: "
+  **Objective**. tap tap
+  **Methods**. tap tap
+  **Results**. tap tap
+  **Conclusions**. tap"
+keywords: [cooperative games, prosocial behaviours]
+bibliography: [references/bibliografia.2.0.bib]
+word-count: false
+floatsintext: true
+numbered-lines: false          # Numbered lines (.pdf and .docx only)
+suppress-title-page: false     # Suppress title page
+link-citations: true           # Link citations to references
+mask: false                    # Masks references that appear in the masked-citations list
+masked-citations: 
+  - ~
+# Language options. See https://quarto.org/docs/authoring/language.html
+lang: en
+language:
+  citation-last-author-separator: "and"
+  title-block-author-note: "Author Note"
+  title-block-correspondence-note: "Correspondence concerning this article should be addressed to"
+  title-block-role-introduction: "Author roles were classified using the Contributor Role Taxonomy (CRediT; [credit.niso.org](https://credit.niso.org)) as follows:"
+  title-impact-statement: "Impact Statement"
+  references-meta-analysis: "References marked with an asterisk indicate studies included in the meta-analysis."
+# Output format
+format:
+#  apaquarto-docx: default
+  apaquarto-pdf:
+    documentmode: man
+    keep-tex: false
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(cache.extra = knitr::rand_seed)
 
-library(tidyverse)
-load('dane/data.rds')
+```{r setup, include = FALSE}
+options(knitr.kable.digits = 2, knitr.kable.na = '')
+knitr::opts_chunk$set(cache.extra = knitr::rand_seed,
+                      echo = F,
+                      fig.width = 7,
+                      fig.height = 5,
+                      fig.align = 'center',
+                      # out.width = "100%",
+                      dev = "svg",
+                      cache = TRUE)
+
+mojekolory <- c("royalblue4", "firebrick4", "#51315E")
 
 ```
-
 
 
 The video games industry has grown significantly over the last few decades.
@@ -128,7 +162,16 @@ The study had to measure at least one social outcome variable, such as prosocial
 
 ## Data analysis
 
-We used `r cite_r("r-references.bib")` for all our analyses.
+Aby zróżnicować heterogeniczność wewnątrz i między artykułami, należy zastosować wielopoziomową (hierarchiczną) metaanalizę, w której efekty zagnieżdżone są w ramach artykułów. Takie podejście umożliwia oszacowanie dwóch komponentów wariancji:
+	1.	\tau^2_{within} – wariancja efektów wewnątrz artykułów (np. różne pomiary, grupy, czas pomiaru),
+	2.	\tau^2_{between} – wariancja między artykułami (różnice między badaniami jako całościami).
+
+Dzięki temu można obliczyć dwa odpowiadające im współczynniki I² (według np. Viechtaubera, 2021):
+	•	I^2_{within} = \frac{\tau^2_{within}}{\tau^2_{within} + \tau^2_{between} + \sigma^2}
+	•	I^2_{between} = \frac{\tau^2_{between}}{\tau^2_{within} + \tau^2_{between} + \sigma^2}
+
+Gdzie \sigma^2 to uśredniony błąd pomiaru (sampling variance).
+
 
 # Results
 

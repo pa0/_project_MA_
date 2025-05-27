@@ -1,14 +1,14 @@
 
-# MAc/MAd - brakuje z, chi_d na około
+# MAd - brakuje z, chi_d na około
 
-MAc::t_to_d(t, n.1, n.2)[,'d']
-MAc::f_to_d(f, n.1, n.2)[,'d']
+MAd::t_to_d(t, n.1, n.2)[,'d']
+MAd::f_to_d(f, n.1, n.2)[,'d']
 
-MAc::mean_to_d(m.1, m.2, sd.1, sd.2, n.1, n.2)[,'d']  
-MAc::mean_to_d2(m.1, m.2, s.pooled, n.1, n.2)[,'d']   # pooled SD
+MAd::mean_to_d(m.1, m.2, sd.1, sd.2, n.1, n.2)[,'d']  
+MAd::mean_to_d2(m.1, m.2, s.pooled, n.1, n.2)[,'d']   # pooled SD
 
-MAc::r_from_chi(chi.sq, n)
-MAc::r_to_d(r, N)
+MAd::r_from_chi(chi.sq, n)
+MAd::r_to_d(r, N)  # UWAGA - gubi znak!
 
 
 MAd::t_to_d(t, n.1, n.2)
