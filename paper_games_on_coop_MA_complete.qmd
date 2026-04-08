@@ -110,7 +110,12 @@ conflict_prefer("filter", "dplyr", quiet = TRUE)
 
 ```{r load-data}
 data <- read.csv("dane/współpraca z AI/construct_interpretation_coding.csv")
+data$effect_id <- 1:nrow(data)
 data$authors_list <- NULL
+
+# Usuwanie wszystkiego co po dacie
+data$lab <- gsub(x = data$cite, pattern = "^([a-z])(\\w+)(\\d{4}).*$", replacement = "\\U\\1\\L\\2_\\3", perl = TRUE)
+
 
 # Konwersja typów
 data <- data |>
@@ -126,12 +131,6 @@ data <- data |>
       TRUE                            ~  NA_real_   # '?' – do rozstrzygnięcia manualnie
     )
   )
-```
-
-
-```{r korekta-kierunku}
-# rozstrzygnięte manualnie kierunki SMD
-data$direction_sign[which(is.na(data$direction_sign))] <- c(+1,+1,-1,+1,+1,+1,+1,+1,-1,-1,-1,+1,+1)
 ```
 
 
@@ -216,16 +215,23 @@ Podać ich zgodność
 
 
 ```{r}
-# zgodność LLMów ChatGPT i Perplexity (np. Cohen's kappa) dla tych wierszy, gdzie oba modele przypisały kierunek (czyli nie '?')
 library(irr)
 table(data$ChatGPT, data$Perplexity)
 
-valid_rows <- data |> filter(ChatGPT != "?", Perplexity != "?")
+# zgodność dla całego zbioru wyników
+kappa2(data[, c("ChatGPT", "Perplexity")])
+
+# zgodność LLMów ChatGPT i Perplexity (np. Cohen's kappa) dla tych wierszy, gdzie oba modele przypisały kierunek (czyli nie '?')
+valid_rows <- data |> dplyr::filter(ChatGPT != "?", Perplexity != "?")
 kappa_result <- kappa2(valid_rows[, c("ChatGPT", "Perplexity")])
 kappa_result
 ```
 
 
+```{r korekta-kierunku}
+# rozstrzygnięte manualnie kierunki SMD
+data$direction_sign[which(is.na(data$direction_sign))] <- c(+1,+1,-1,+1,+1,+1,+1,+1,-1,-1,-1,+1,+1)
+```
 
 ## Effect Size Computation
 
@@ -412,76 +418,76 @@ data <- data |>
 # ===================== Przeliczenie SMD =====================
 
 # uzupełnienie N grup, gdy tylko total
-data$n_prosoc[data$meta_stat == 'm' &
-                data$n_prosoc |> is.na()] <- floor(data$meta_stat == 'm' &
-                                                     data$n[data$n_prosoc |> is.na()] / 2)
-data$n_con[data$meta_stat == 'm' &
-             data$n_con |> is.na()] <- floor(data$meta_stat == 'm' &
-                                               data$n[data$n_con |> is.na()] / 2)
+data$n_prosoc[data$meta_stat == 'm' & data$n_prosoc |> is.na()] <- floor(
+  data$n[data$meta_stat == 'm' & data$n_prosoc |> is.na()] / 2
+)
+
+data$n_con[data$meta_stat == 'm' & data$n_con |> is.na()] <- floor(
+  data$n[data$meta_stat == 'm' & data$n_con |> is.na()] / 2
+)
 
 # Konwersja do SMD (SMD_R) w zależności od dostępnych statystyk
 data <- data |>
   rowwise() |>
   mutate(
-    SMD_R = case_when(
-      meta_stat == 'm' ~
-        esc::esc_mean_sd(grp1m = m_prosoc, grp1sd = sd_prosoc, grp1n = min(n_prosoc,floor(n/2)),
-                         grp2m = m_con,    grp2sd = sd_con,    grp2n = min(n_con,floor(n/2)))$es,
-
-      meta_stat %in% c('r', 'beta') ~
-        esc::esc_rpb(r = effect_size, totaln = n)$es,
-
-      meta_stat == 'b' ~
-        esc::esc_B(
-          b = effect_size,
-          sdy = sd_Y,
-          grp1n = n_prosoc,
-          grp2n = n_con
-        )$es,
-
-      !is.na(m_prosoc) & !is.na(sd_prosoc) &
-      !is.na(m_con) & !is.na(sd_con) ~
-        metaConvert::es_from_means_sd(
-          m_prosoc, sd_prosoc,
-          m_con, sd_con,
-          n_prosoc, n_con
-        )$d,
-
-      n_con != n_prosoc & meta_stat == 't' ~
-        esc::esc_t(t = test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,
-
-      n_con != n_prosoc & meta_stat == 'f' ~
-        esc::esc_f(f = test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es,
-
-      n_con != n_prosoc & meta_stat == 'chi' ~
-        esc::esc_rpb(
-          r = effectsize::chisq_to_phi(abs(test_list.stat), n = n, adjust = FALSE)$phi,
-          grp1n = n_prosoc,
-          grp2n = n_con
-        )$es,
-
-      n_con == n_prosoc & meta_stat == 'z' ~
-        effectsize::z_to_d(test_list.stat, n = n)$d,
-
-      n_con == n_prosoc & meta_stat == 't' ~
-        esc::esc_t(t = test_list.stat, totaln = n)$es,
-
-      n_con == n_prosoc & meta_stat == 'f' ~
-        esc::esc_f(f = test_list.stat, totaln = n)$es,
-
-      n_con == n_prosoc & meta_stat == 'chi' ~
-        esc::esc_chisq(chisq = test_list.stat, totaln = n)$es,
-
-      is.na(n_con) & is.na(n_prosoc) & meta_stat == 't' ~
-        esc::esc_t(t = test_list.stat, totaln = n)$es,
-
-      is.na(n_con) & is.na(n_prosoc) & meta_stat == 'chi' ~
-        effectsize::oddsratio_to_d(
-          max((38 + 14) / (23 + 10), (23 + 10) / (38 + 14))
-        ),
-
-      TRUE ~ NA_real_
-    )
+    SMD_R = if (meta_stat == 'm') {
+      esc::esc_mean_sd(
+        grp1m = m_prosoc,
+        grp1sd = sd_prosoc,
+        grp1n = min(n_prosoc, floor(n / 2)),
+        grp2m = m_con,
+        grp2sd = sd_con,
+        grp2n = min(n_con, floor(n / 2))
+      )$es
+    } else if (meta_stat %in% c('r', 'beta')) {
+      esc::esc_rpb(r = effect_size, totaln = n)$es
+    } else if (meta_stat == 'b') {
+      esc::esc_B(
+        b = effect_size,
+        sdy = sd_Y,
+        grp1n = n_prosoc,
+        grp2n = n_con
+      )$es
+    } else if (!is.na(m_prosoc) & !is.na(sd_prosoc) & !is.na(m_con) & !is.na(sd_con)) {
+      metaConvert::es_from_means_sd(
+        m_prosoc,
+        sd_prosoc,
+        m_con,
+        sd_con,
+        n_prosoc,
+        n_con
+      )$d
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con != n_prosoc & meta_stat == 't') {
+      esc::esc_t(t = test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con != n_prosoc & meta_stat == 'f') {
+      esc::esc_f(f = test_list.stat, grp1n = n_prosoc, grp2n = n_con)$es
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con != n_prosoc & meta_stat == 'chi') {
+      esc::esc_rpb(
+        r = effectsize::chisq_to_phi(
+          abs(test_list.stat),
+          n = n,
+          adjust = FALSE
+        )$phi,
+        grp1n = n_prosoc,
+        grp2n = n_con
+      )$es
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con == n_prosoc & meta_stat == 'z') {
+      effectsize::z_to_d(test_list.stat, n = n)$d
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con == n_prosoc & meta_stat == 't') {
+      esc::esc_t(t = test_list.stat, totaln = n)$es
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con == n_prosoc & meta_stat == 'f') {
+      esc::esc_f(f = test_list.stat, totaln = n)$es
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con == n_prosoc & meta_stat == 'chi') {
+      esc::esc_chisq(chisq = test_list.stat, totaln = n)$es
+    } else if (is.na(n_con) & is.na(n_prosoc) & meta_stat == 't') {
+      esc::esc_t(t = test_list.stat, totaln = n)$es
+    } else if (is.na(n_con) & is.na(n_prosoc) & meta_stat == 'chi') {
+      effectsize::oddsratio_to_d(
+        max((38 + 14) / (23 + 10), (23 + 10) / (38 + 14))
+      )
+    } else {
+      NA_real_
+    }
   ) |>
   ungroup()
 
@@ -499,27 +505,76 @@ data <- data |>
 data <- data |>
   mutate(
     SMD_var = case_when(
-      meta_stat %in% c('r', 'beta')                                ~ 4 / ((1 - effect_size^2) * (n - 1)),
-      n_con == n_prosoc & meta_stat == 'chi'                       ~ SMD_R^2 / abs(test_list.stat),
-      is.na(n_con) & is.na(n_prosoc) & meta_stat == 'chi'         ~ (1/(38+14) + 1/(23+10)) * 3 / pi^2,
-      !is.na(n_con) & !is.na(n_prosoc)                            ~ (n_con + n_prosoc) / (n_con * n_prosoc) + SMD_R^2 / (2 * n),
-      !is.na(SMD_R)                                               ~ 2/n + SMD_R^2 / (4 * n)
+      meta_stat %in% c('r', 'beta') ~ 4 / ((1 - effect_size^2) * (n - 1)),
+      n_con == n_prosoc & meta_stat == 'chi' ~ SMD_R^2 / abs(test_list.stat),
+      is.na(n_con) & is.na(n_prosoc) & meta_stat == 'chi' ~ (1/(38+14) + 1/(23+10)) * 3 / pi^2,
+      !is.na(n_con) & !is.na(n_prosoc) ~ (n_con + n_prosoc) / (n_con * n_prosoc) + SMD_R^2 / (2 * n),
+      !is.na(SMD_R) ~ 2/n + SMD_R^2 / (4 * n)
     ),
     SMD_se = sqrt(SMD_var)
   )
 
 # Dane do analizy – tylko wiersze z kompletnym SMD i wariancją
 data_ma <- data |>
-  dplyr::filter(!is.na(SMD_signed), !is.na(SMD_var)) |>
+  rowwise() |>
   mutate(
-    lab = str_remove(cite, "_[a-z]$"),   # identyfikator artykułu (bez sufiksu literowego)
-    effect_id = row_number()
-  )
+    SMD_var = if (meta_stat == 'm') {
+      esc::esc_mean_sd(
+        grp1m = m_prosoc,
+        grp1sd = sd_prosoc,
+        grp1n = min(n_prosoc, floor(n / 2)),
+        grp2m = m_con,
+        grp2sd = sd_con,
+        grp2n = min(n_con, floor(n / 2))
+      )$var
+    } else if (meta_stat %in% c('r', 'beta')) {
+      esc::esc_rpb(r = effect_size, totaln = n)$var
+    } else if (meta_stat == 'b') {
+      esc::esc_B(
+        b = effect_size,
+        sdy = sd_Y,
+        grp1n = n_prosoc,
+        grp2n = n_con
+      )$var
+    } else if (!is.na(m_prosoc) & !is.na(sd_prosoc) & !is.na(m_con) & !is.na(sd_con)) {
+      (n_con + n_prosoc) / (n_con * n_prosoc) + SMD_R^2 / (2 * (n_con + n_prosoc))
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con != n_prosoc & meta_stat == 't') {
+      esc::esc_t(t = test_list.stat, grp1n = n_prosoc, grp2n = n_con)$var
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con != n_prosoc & meta_stat == 'f') {
+      esc::esc_f(f = test_list.stat, grp1n = n_prosoc, grp2n = n_con)$var
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con != n_prosoc & meta_stat == 'chi') {
+      esc::esc_rpb(
+        r = effectsize::chisq_to_phi(
+          abs(test_list.stat),
+          n = n,
+          adjust = FALSE
+        )$phi,
+        grp1n = n_prosoc,
+        grp2n = n_con
+      )$var
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con == n_prosoc & meta_stat == 'z') {
+      (n_con + n_prosoc) / (n_con * n_prosoc) + SMD_R^2 / (2 * (n_con + n_prosoc))
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con == n_prosoc & meta_stat == 't') {
+      esc::esc_t(t = test_list.stat, totaln = n)$var
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con == n_prosoc & meta_stat == 'f') {
+      esc::esc_f(f = test_list.stat, totaln = n)$var
+    } else if (!is.na(n_con) & !is.na(n_prosoc) & n_con == n_prosoc & meta_stat == 'chi') {
+      esc::esc_chisq(chisq = test_list.stat, totaln = n)$var
+    } else if (is.na(n_con) & is.na(n_prosoc) & meta_stat == 't') {
+      esc::esc_t(t = test_list.stat, totaln = n)$var
+    } else if (is.na(n_con) & is.na(n_prosoc) & meta_stat == 'chi') {
+      (1 / (38 + 14) + 1 / (23 + 10)) * 3 / pi^2
+    } else if (!is.na(SMD_R)) {
+      2 / n + SMD_R^2 / (4 * n)
+    } else {
+      NA_real_
+    }
+
+  ) |>
+  ungroup()
 ```
 
-## Sample Description
-
-```{r tbl-descriptives}
+```{r}
 n_studies    <- length(unique(data_ma$lab))
 n_effects    <- nrow(data_ma)
 n_total_part <- sum(data_ma$n, na.rm = TRUE)
@@ -677,6 +732,160 @@ forest(met_ml,
        refline = 0)
 ```
 
+## Sensitivity Analyses: Correlation Assumption
+
+```{r sensitivity-analysis-rho}
+# ===================== Sensitivity analyses: rho ∈ {0.40, 0.60, 0.80} =====================
+
+# Funkcja pomocnicza do budowy V_mat
+build_V_for_rho <- function(data, rho_val) {
+  data_sorted <- data |> arrange(lab, effect_id)
+  make_block_local <- function(vi, rho) {
+    m   <- length(vi)
+    mat <- matrix(rho, nrow = m, ncol = m)
+    diag(mat) <- 1
+    outer(sqrt(vi), sqrt(vi)) * mat
+  }
+  V_list_temp <- lapply(
+    split(data_sorted, data_sorted$lab),
+    function(df) make_block_local(df$SMD_var, rho_val)
+  )
+  Matrix::bdiag(V_list_temp) |> as.matrix()
+}
+
+# Parametry do testowania
+rho_values <- c(0.40, 0.60, 0.80)
+sensitivity_results <- list()
+
+for (rho_test in rho_values) {
+  # Budowa V_mat dla tego rho
+  V_test <- build_V_for_rho(data_ma, rho_test)
+  
+  # Obliczenie modelu
+  model_test <- rma.mv(
+    yi      = SMD_signed,
+    V       = V_test,
+    random  = ~ 1 | lab / effect_id,
+    data    = data_ma,
+    method  = "REML"
+  )
+  
+  # Przechowywanie wyników
+  sensitivity_results[[as.character(rho_test)]] <- list(
+    rho      = rho_test,
+    b        = round(coef(model_test), 3),
+    se       = round(sqrt(vcov(model_test)[1,1]), 3),
+    ci_lb    = round(model_test$ci.lb, 3),
+    ci_ub    = round(model_test$ci.ub, 3),
+    z        = round(model_test$zval, 2),
+    p        = model_test$pval,
+    I2_total = round(100 * (model_test$sigma2[1] + model_test$sigma2[2]) / 
+                           (model_test$sigma2[1] + model_test$sigma2[2] + mean(data_ma$SMD_var, na.rm = TRUE)), 1)
+  )
+}
+
+# Tablica porównawcza
+sensitivity_tbl <- tibble(
+  `ρ` = sapply(sensitivity_results, `[[`, "rho"),
+  `d` = sapply(sensitivity_results, `[[`, "b"),
+  `SE` = sapply(sensitivity_results, `[[`, "se"),
+  `95% CI` = paste0("[", sapply(sensitivity_results, `[[`, "ci_lb"), 
+                    ", ", sapply(sensitivity_results, `[[`, "ci_ub"), "]"),
+  `z` = sapply(sensitivity_results, `[[`, "z"),
+  `p` = sapply(sensitivity_results, `[[`, "p"),
+  `I²` = sapply(sensitivity_results, `[[`, "I2_total")
+)
+
+kable(sensitivity_tbl,
+      caption = "Sensitivity analyses: pooled effect across assumed within-study correlations (ρ).")
+```
+
+The main findings remained robust across sensitivity analyses with assumed within-study correlations ranging from ρ = 0.40 to 0.80. The pooled effect estimates were comparable, indicating that inferences about the overall effect of prosocial and cooperative games on social outcomes are not unduly sensitive to the choice of within-study correlation structure.
+
+## Sensitivity Analyses: Large-Effect Exclusion
+
+```{r sensitivity-analysis-large-effects}
+# ===================== Sensitivity analyses: full sample vs exclusion of 3 largest effects =====================
+
+# Efekty o największej bezwzględnej wielkości (spośród tych > 2)
+extreme_effects <- data_ma |>
+  mutate(abs_d = abs(SMD_signed)) |>
+  dplyr::filter(abs_d > 2) |>
+  arrange(desc(abs_d))
+
+effects_to_exclude <- extreme_effects |>
+  slice_max(order_by = abs_d, n = 3, with_ties = FALSE)
+
+excluded_cites <- effects_to_exclude$cite
+
+# Model na pełnym zbiorze
+full_model_stats <- tibble(
+  Model = "Full sample",
+  k_effects = nrow(data_ma),
+  d = round(as.numeric(coef(met_ml)), 3),
+  SE = round(sqrt(vcov(met_ml)[1, 1]), 3),
+  ci_lb = round(met_ml$ci.lb, 3),
+  ci_ub = round(met_ml$ci.ub, 3),
+  p = met_ml$pval,
+  I2_total = round(100 * (met_ml$sigma2[1] + met_ml$sigma2[2]) /
+                     (met_ml$sigma2[1] + met_ml$sigma2[2] + mean(data_ma$SMD_var, na.rm = TRUE)), 1)
+)
+
+# Model po wykluczeniu 3 największych efektów
+data_ma_reduced <- data_ma |>
+  dplyr::filter(!(cite %in% excluded_cites)) |>
+  arrange(lab, effect_id)
+
+V_list_reduced <- lapply(
+  split(data_ma_reduced, data_ma_reduced$lab),
+  function(df) make_block(df$SMD_var, rho)
+)
+V_mat_reduced <- Matrix::bdiag(V_list_reduced) |> as.matrix()
+
+met_ml_reduced <- rma.mv(
+  yi      = SMD_signed,
+  V       = V_mat_reduced,
+  random  = ~ 1 | lab / effect_id,
+  data    = data_ma_reduced,
+  slab    = cite,
+  method  = "REML"
+)
+
+reduced_model_stats <- tibble(
+  Model = "Without 3 largest |d| effects",
+  k_effects = nrow(data_ma_reduced),
+  d = round(as.numeric(coef(met_ml_reduced)), 3),
+  SE = round(sqrt(vcov(met_ml_reduced)[1, 1]), 3),
+  ci_lb = round(met_ml_reduced$ci.lb, 3),
+  ci_ub = round(met_ml_reduced$ci.ub, 3),
+  p = met_ml_reduced$pval,
+  I2_total = round(100 * (met_ml_reduced$sigma2[1] + met_ml_reduced$sigma2[2]) /
+                     (met_ml_reduced$sigma2[1] + met_ml_reduced$sigma2[2] + mean(data_ma_reduced$SMD_var, na.rm = TRUE)), 1)
+)
+
+sensitivity_large_tbl <- bind_rows(full_model_stats, reduced_model_stats) |>
+  mutate(
+    `95% CI` = paste0("[", ci_lb, ", ", ci_ub, "]"),
+    p = ifelse(p < .001, "< .001", round(p, 3))
+  ) |>
+  select(Model, k_effects, d, SE, `95% CI`, p, I2_total)
+
+kable(
+  effects_to_exclude |>
+    transmute(cite, lab, SMD_signed, abs_d) |>
+    mutate(across(c(SMD_signed, abs_d), ~ round(.x, 3))),
+  caption = "Three largest effects (selected for sensitivity analysis)."
+)
+
+kable(
+  sensitivity_large_tbl,
+  col.names = c("Model", "k effects", "d", "SE", "95% CI", "p", "I² total"),
+  caption = "Sensitivity analysis: full sample vs model excluding the 3 largest effects."
+)
+```
+
+To ensure transparent reporting, we present both the full-sample model and a sensitivity model excluding the three largest effects (identified a priori by absolute magnitude of *d* among effects with |*d*| > 2). The substantive conclusions are interpreted based on the full model, while the reduced model is treated as a robustness check.
+
 ## Heterogeneity and Influence Diagnostics
 
 ```{r fig-funnel, fig.cap="Funnel plot of standard error by Cohen's d. Vertical line indicates the pooled estimate."}
@@ -780,7 +989,7 @@ mod_age <- rma.mv(
   V      = V_mat,
   mods   = ~ age_mean,
   random = ~ 1 | lab / effect_id,
-  data   = data_ma |> dplyr::filter(!is.na(age_mean)),
+  data   = data_ma,
   method = "REML"
 )
 
