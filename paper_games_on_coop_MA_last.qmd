@@ -57,7 +57,10 @@ abstract: "
   **Results**. The multilevel random-effects model yielded an overall effect of *d* = 0.419 (SE = 0.091), 95% CI [0.241, 0.598], *z* = 4.6, *p* < .001, indicating a positive small-to-medium effect of prosocial and cooperative game play on prosocial outcomes. Heterogeneity was substantial (*I*²~total~ = 85.5%). Moderator analyses revealed that neither game content (prosocial vs. neutral/violent: *b* = −0.50, *p* = .110) nor game context (cooperative vs. competitive/solo: *b* = −0.15, *p* = .632) significantly moderated the effect. Egger's test indicated funnel plot asymmetry consistent with publication bias (*z* = 4.72, *p* < .001).
   **Conclusions**. Cooperative and prosocial game play is associated with positive social outcomes of moderate magnitude. The high heterogeneity and evidence of publication bias suggest that the true effect may be somewhat smaller. Future research should use pre-registered designs and standardized outcome measures to strengthen causal inferences."
 keywords: [cooperative games, prosocial behaviour, meta-analysis, video games, helping behavior]
-bibliography: [references/_ref_gry_coop.bib, references_meta/_meta_ref_gry_coop.tak.bib]
+bibliography:
+  - references/_ref_gry_coop.bib
+  - references_meta/_meta_ref_gry_coop.tak.bib
+nocite: '@*'
 word-count: false
 floatsintext: true
 numbered-lines: true
@@ -196,10 +199,24 @@ Upon further reading, 45 studies were selected as relevant and providing suffici
 A PRISMA flow diagram summarizing the study selection process is presented in @fig-prisma.
 
 ```{r fig-prisma, fig.cap="PRISMA flow diagram of study selection."}
-# Komentarz: wstaw gotowy diagram PRISMA (np. wygenerowany ggplot lub obraz PNG)
 # Minimalnie potrzebne liczby: 1407 przeszukanych, 85 zakwalifikowanych po abstrakcie,
 # 45 ostatecznie włączonych do meta-analizy (88 rozmiarów efektu)
-cat("# [PRISMA diagram do wygenerowania lub wklejenia jako obraz]\n")
+
+library(DiagrammeR)
+
+grViz(
+  "
+  digraph PRISMA {
+    graph [layout = dot, rankdir = TB, nodesep = 0.5, ranksep = 0.7]
+
+    node [shape = box, style = filled, fillcolor = white, color = grey35, width = 3.9, height = 0.8, fontsize = 10]
+
+    # Nagłówki sekcji
+
+
+  }
+"
+)
 ```
 
 ## Coding Procedure
@@ -780,7 +797,7 @@ sensitivity_results <- list()
 for (rho_test in rho_values) {
   # Budowa V_mat dla tego rho
   V_test <- build_V_for_rho(data_ma, rho_test)
-  
+
   # Obliczenie modelu
   model_test <- rma.mv(
     yi      = SMD_signed,
@@ -789,7 +806,7 @@ for (rho_test in rho_values) {
     data    = data_ma,
     method  = "REML"
   )
-  
+
   # Przechowywanie wyników
   sensitivity_results[[as.character(rho_test)]] <- list(
     rho      = rho_test,
@@ -799,7 +816,7 @@ for (rho_test in rho_values) {
     ci_ub    = round(model_test$ci.ub, 3),
     z        = round(model_test$zval, 2),
     p        = model_test$pval,
-    I2_total = round(100 * (model_test$sigma2[1] + model_test$sigma2[2]) / 
+    I2_total = round(100 * (model_test$sigma2[1] + model_test$sigma2[2]) /
                            (model_test$sigma2[1] + model_test$sigma2[2] + mean(data_ma$SMD_var, na.rm = TRUE)), 1)
   )
 }
@@ -809,7 +826,7 @@ sensitivity_tbl <- tibble(
   `ρ` = sapply(sensitivity_results, `[[`, "rho"),
   `d` = sapply(sensitivity_results, `[[`, "b"),
   `SE` = sapply(sensitivity_results, `[[`, "se"),
-  `95% CI` = paste0("[", sapply(sensitivity_results, `[[`, "ci_lb"), 
+  `95% CI` = paste0("[", sapply(sensitivity_results, `[[`, "ci_lb"),
                     ", ", sapply(sensitivity_results, `[[`, "ci_ub"), "]"),
   `z` = sapply(sensitivity_results, `[[`, "z"),
   `p` = sapply(sensitivity_results, `[[`, "p"),
